@@ -12,7 +12,7 @@ JAVA = java
 #
 JFLAGS = -g -cp
 
-JAR = java-getopt-1.0.14.jar
+JAR = java-getopt-1.0.14.jar;.
 
 # typing 'make' will invoke the first target entry in the makefile 
 # (the default one in this case)
@@ -30,16 +30,16 @@ DES.class: DES.java
 # Removes all .class files, so that the next make rebuilds them
 #
 clean: 
-	$(RM) *.class
+	del *.class
 
 run-d:
-	$(JAVA) -cp .:java-getopt-1.0.14.jar DES -d
+	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -d
 
 run-h:
-	$(JAVA) -cp .:java-getopt-1.0.14.jar DES -h 
+	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -h 
 
 run-k:
-	$(JAVA) -cp .:java-getopt-1.0.14.jar DES -k
+	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -k
 
 run-e:
-	$(JAVA) -cp .:java-getopt-1.0.14.jar DES -e
+	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -e
