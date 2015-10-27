@@ -91,23 +91,31 @@ public class DES {
 
 	static void genDESkey() {
 		try{
-    		// Create a secure random number generator using the SHA1PRNG algorithm
-    		SecureRandom secureRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
-    		// Get 128 random byte
-    		byte[] randomBytes = new byte[128];
-    		secureRandomGenerator.nextBytes(randomBytes);
-    		// Create two secure number generators with the same seed
+
+    		SecureRandom randomGen = SecureRandom.getInstance("SHA1PRNG");
+
+    		//array of bytes to store the random numbers in 
+    		byte[] bytes = new byte[8]; 
+    		//fill it with random bytes
+    		randomGen.nextBytes(bytes);
+
+    		/*
     		int seedByteCount = 5;
     		byte[] seed = secureRandomGenerator.generateSeed(seedByteCount);
     		SecureRandom secureRandom1 = SecureRandom.getInstance("SHA1PRNG");
     		secureRandom1.setSeed(seed);
     		SecureRandom secureRandom2 = SecureRandom.getInstance("SHA1PRNG");
     		secureRandom2.setSeed(seed);
+			*/
+    		StringBuilder sb = new StringBuilder();
+    		for (byte b : bytes) {
+        		sb.append(String.format("%02X ", b));
+    		}
 
-    		System.out.println("New key goes here: " + randomBytes);
+    		System.out.println(sb);
 			return;
     	} catch (Exception e){
-    		System.out.println("Invalid algorithm!");
+    		System.out.println("Invalid algorithm given to SecureRandom.getInstance (I think)");
     		return;
     	}
 
