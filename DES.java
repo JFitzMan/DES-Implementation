@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -18,14 +19,17 @@ public class DES {
 		
 		StringBuilder inputFile = new StringBuilder();
 		StringBuilder outputFile = new StringBuilder();
+		StringBuilder keyFileName = new StringBuilder();
 		StringBuilder keyStr = new StringBuilder();
 		StringBuilder encrypt = new StringBuilder();
 		
-		pcl(args, inputFile, outputFile, keyStr, encrypt);
+		pcl(args, inputFile, outputFile, keyFileName, encrypt);
 		
 		if(keyStr.toString() != "" && encrypt.toString().equals("e")){
+			readKey(keyFileName.toString(), keyStr );
 			encrypt(keyStr, inputFile, outputFile);
 		} else if(keyStr.toString() != "" && encrypt.toString().equals("d")){
+			readKey(keyFileName.toString(), keyStr );
 			decrypt(keyStr, inputFile, outputFile);
 		}
 		
@@ -90,6 +94,7 @@ public class DES {
 
 
 	static void genDESkey() {
+
 		try{
 
     		SecureRandom randomGen = SecureRandom.getInstance("SHA1PRNG");
@@ -113,11 +118,18 @@ public class DES {
     		}
 
     		System.out.println(sb);
+
+    		//also write key to file key.k
+    		FileOutputStream outputStream = new FileOutputStream("key.k");
+    		outputStream.write(bytes);
+    		outputStream.close();
+
+
 			return;
     	} catch (Exception e){
     		System.out.println("Invalid algorithm given to SecureRandom.getInstance (I think)");
     		return;
-    	}
+    	} 
 
 		
 	}
@@ -129,7 +141,7 @@ public class DES {
 	 * -h for the host name of system
 	 */
 	private static void pcl(String[] args, StringBuilder inputFile,
-							StringBuilder outputFile, StringBuilder keyString,
+							StringBuilder outputFile, StringBuilder keyFileName,
 							StringBuilder encrypt) {
 		/*
 		 * http://www.urbanophile.com/arenn/hacking/getopt/gnu.getopt.Getopt.html
@@ -149,12 +161,12 @@ public class DES {
 		        	  break;
 	     	  	  case 'e':
 		        	  arg = g.getOptarg();
-		        	  keyString.append(arg);
+		        	  keyFileName.append(arg);
 		        	  encrypt.append("e");
 		        	  break;
 	     	  	  case 'd':
 		        	  arg = g.getOptarg();
-		        	  keyString.append(arg);
+		        	  keyFileName.append(arg);
 		        	  encrypt.append("d");
 		        	  break;
 		          case 'k':
@@ -190,6 +202,36 @@ public class DES {
 		System.err.println(useage);
 		System.exit(exitStatus);
 		
+	}
+
+
+	private static void readKey(String fileName, StringBuilder keyStr) {
+
+		try {
+
+			//buffer to read key into
+			byte [] buf = new byte [8];
+
+			//reads data into buffer
+			FileInputStream input = new FileInputStream(fileName);
+
+			int bytesRead = 0;
+
+			while ( bytesRead != -1 ){
+				bytesRead = input.read(buf);
+			}
+			//close file after reading
+			input.close();
+
+			keyStr.append(buf);
+
+
+		} catch (FileNotFoundException e) {
+			System.err.println("File " + fileName + " could not be opened!");
+		}catch (IOException e){
+			System.err.println("File " + fileName + " could not be read!");
+		}
+
 	}
 	
 }
