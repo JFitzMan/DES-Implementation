@@ -103,11 +103,15 @@ public class DES {
     		secureRandom1.setSeed(seed);
     		SecureRandom secureRandom2 = SecureRandom.getInstance("SHA1PRNG");
     		secureRandom2.setSeed(seed);
+
+    		System.out.println("New key goes here: " + randomBytes);
+			return;
     	} catch (Exception e){
+    		System.out.println("Invalid algorithm!");
+    		return;
     	}
 
-		System.out.println("New key goes here");
-		return;
+		
 	}
 
 
