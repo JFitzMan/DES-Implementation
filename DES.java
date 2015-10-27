@@ -129,7 +129,6 @@ public class DES {
 		        	  genDESkey();
 		        	  break;
 		          case 'h':
-		          	  System.out.println("HERE");
 		        	  callUseage(0);
 		          case '?':
 		            break; // getopt() already printed an error
@@ -144,6 +143,17 @@ public class DES {
 	private static void callUseage(int exitStatus) {
 		
 		String useage = "";
+		useage += "-h   No args\n";
+		useage += "       Usage information.\n\n";
+		useage += "-k   No args\n";
+		useage += "       Generate a DES key, encoded in hex, printed on the command line.\n\n";
+		useage += "-e   Usage: -e <64 bit key in hex> -i <input file> -o <output file>\n";
+		useage += "       Encrypt the file <input file> using <64 bit key in hex>\n";
+		useage += "       and store the encrypted file in <output file>.\n\n";
+		useage += "-d   Usage: -d <64 bit key in hex> -i <input file> -o <output file>\n";
+		useage += "       Decrypt the file <input file> using <64 bit key in hex>\n";
+		useage += "       and store the plain text <output file>.\n";
+
 		
 		System.err.println(useage);
 		System.exit(exitStatus);
