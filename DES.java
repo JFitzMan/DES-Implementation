@@ -5,6 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import java.util.BitSet;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.Base64.Encoder;
+
 import gnu.getopt.Getopt;
 
 
