@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.BitSet;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.Base64.Encoder;
 
 import gnu.getopt.Getopt;
 
@@ -90,7 +89,23 @@ public class DES {
 	}
 
 
-	static void genDESkey(){
+	static void genDESkey() {
+		try{
+    		// Create a secure random number generator using the SHA1PRNG algorithm
+    		SecureRandom secureRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
+    		// Get 128 random byte
+    		byte[] randomBytes = new byte[128];
+    		secureRandomGenerator.nextBytes(randomBytes);
+    		// Create two secure number generators with the same seed
+    		int seedByteCount = 5;
+    		byte[] seed = secureRandomGenerator.generateSeed(seedByteCount);
+    		SecureRandom secureRandom1 = SecureRandom.getInstance("SHA1PRNG");
+    		secureRandom1.setSeed(seed);
+    		SecureRandom secureRandom2 = SecureRandom.getInstance("SHA1PRNG");
+    		secureRandom2.setSeed(seed);
+    	} catch (Exception e){
+    	}
+
 		System.out.println("New key goes here");
 		return;
 	}
