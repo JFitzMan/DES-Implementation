@@ -104,11 +104,40 @@ public class DES {
 		return new BitSet();
 	}
 
+	/*
+	* given an array of bytes, this function return a bitset that represents the array.
+	*
+	*/
 	private static BitSet bytesToBitSet(byte[] input){
-		return new BitSet();
-	}
 
+		//each byte has 8 bits in the bitset
+		BitSet toReturn = new BitSet(input.length * 8);
+		int curIndex = 0;
 
+		//this loop iterates over the bytes
+		for (int i = 0; i < input.length; i++){
+			//working byte
+			byte b = input[i];
+
+			//this loop iterates over the byte
+			for ( int k=0; k<8; k++) {
+				//flip bits
+				if ((b & (1 << k)) > 0){
+					//add curIndex to account for multiple bytes
+        			toReturn.set(curIndex + k);
+   			 	}
+			}
+			//increment curIndex by 8 to move to next byte position
+			curIndex += 8;
+		}
+		//return new bitset
+		return toReturn;
+	}//bytesToBitSet
+
+	/*
+	* Generates a random key. Saves the hex representation as a string to keyStr
+	* Writes the bytes to the file key.k
+	*/
 	static void genDESkey() {
 
 		try{
@@ -122,7 +151,7 @@ public class DES {
 
     		StringBuilder sb = new StringBuilder();
     		for (byte b : bytes) {
-        		sb.append(String.format("%02X ", b));
+        		sb.append(String.format("%02x ", b));
     		}
 
     		System.out.println(sb);
@@ -210,7 +239,10 @@ public class DES {
 		
 	}
 
-
+	/*
+	* Reads key in from file key.k
+	* saves hex representation of it in keyStr
+	*/
 	private static void readKey(String fileName, StringBuilder keyStr) {
 
 		try {
