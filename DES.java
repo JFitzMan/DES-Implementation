@@ -30,7 +30,7 @@ public class DES {
 			readKey(keyFileName.toString(), keyStr );
 			encrypt(keyStr, inputFile, outputFile);
 		} else if(keyStr.toString() != "" && encrypt.toString().equals("d")){
-			readKey(keyFileName.toString(), keyStr );g
+			readKey(keyFileName.toString(), keyStr );
 			decrypt(keyStr, inputFile, outputFile);
 		}
 		
@@ -78,9 +78,11 @@ public class DES {
 				encryptedText = DES_encrypt(line);
 				writer.print(encryptedText);
 			}
+			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 
 		
 	}
@@ -90,7 +92,7 @@ public class DES {
 	 */
 	private static String DES_encrypt(String line) {
 		
-		return null;
+		return "TEST";
 	}
 
 
