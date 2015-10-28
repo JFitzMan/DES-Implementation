@@ -99,7 +99,10 @@ public class DES {
 		return new BitSet();
 	}
 
-	//given an array of bytes, this function return a bitset that represents the array.
+	/*
+	* given an array of bytes, this function return a bitset that represents the array.
+	*
+	*/
 	private static BitSet bytesToBitSet(byte[] input){
 
 		//each byte has 8 bits in the bitset
@@ -122,10 +125,14 @@ public class DES {
 			//increment curIndex by 8 to move to next byte position
 			curIndex += 8;
 		}
+		//return new bitset
 		return toReturn;
-	}
+	}//bytesToBitSet
 
-
+	/*
+	* Generates a random key. Saves the hex representation as a string to keyStr
+	* Writes the bytes to the file key.k
+	*/
 	static void genDESkey() {
 
 		try{
@@ -227,7 +234,10 @@ public class DES {
 		
 	}
 
-
+	/*
+	* Reads key in from file key.k
+	* saves hex representation of it in keyStr
+	*/
 	private static void readKey(String fileName, StringBuilder keyStr) {
 
 		try {
