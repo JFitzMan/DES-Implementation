@@ -72,7 +72,7 @@ public class DES {
 		
 		try {
 			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
-			//String key = keyStr.toString();
+			String key = keyStr.toString();
 			byte[] keyBytes = (keyStr.toString()).getBytes();
 			//Testing the byte array for consistency
 			/*for(int i=0; i<keyBytes.length;i++) 
@@ -83,6 +83,7 @@ public class DES {
 				encryptedText = DES_encrypt(line);
 				writer.print(encryptedText);
 			}
+			encryptedText = DES_encrypt(NULL);
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -93,6 +94,12 @@ public class DES {
 	}
 	/**
 	 * TODO: You need to write the DES encryption here.
+	 * This is going to collect bytes until it forms a new line
+	 *
+	 * At that point, its going to call encrypt64bits, get the enrypted bits, and return them.
+	 *
+	 * When the input arg line == NULL, it will need to prepare a buffer before sending whats
+	 * left to the encrypt64bits function
 	 * @param line
 	 */
 	private static String DES_encrypt(String line) {
