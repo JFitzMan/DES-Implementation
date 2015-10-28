@@ -72,6 +72,11 @@ public class DES {
 		
 		try {
 			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
+			//String key = keyStr.toString();
+			byte[] keyBytes = (keyStr.toString()).getBytes();
+			//Testing the byte array for consistency
+			/*for(int i=0; i<keyBytes.length;i++) 
+				System.out.print((char) keyBytes[i] + " ");*/
 			
 			String encryptedText;
 			for (String line : Files.readAllLines(Paths.get(inputFile.toString()), Charset.defaultCharset())) {

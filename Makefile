@@ -33,7 +33,7 @@ clean:
 	del *.class
 
 run-d:
-	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -d
+	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -d key.k -i testEncryptOutputFile.txt -o testDecryptOutputFile.txt
 
 run-h:
 	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -h 
@@ -42,4 +42,4 @@ run-k:
 	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -k
 
 run-e:
-	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -e
+	$(JAVA) -cp java-getopt-1.0.14.jar;. DES -e key.k -i testEncryptInputFile.txt -o testEncryptOutputFile.txt
