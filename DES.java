@@ -91,8 +91,16 @@ public class DES {
 	 * @param line
 	 */
 	private static String DES_encrypt(String line) {
-		
-		return "TEST";
+		return "";
+	}
+
+	//before coming here, the bits MUST be padded. 64 bits are expected as input
+	private static BitSet encrypt64Bits(BitSet input, byte[][] subkey){
+		return new BitSet();
+	}
+
+	private static BitSet bytesToBitSet(byte[] input){
+		return new BitSet();
 	}
 
 
@@ -128,8 +136,6 @@ public class DES {
 
 		
 	}
-
-
 	/**
 	 * This function Processes the Command Line Arguments.
 	 * -p for the port number you are using
@@ -216,8 +222,14 @@ public class DES {
 			}
 			//close file after reading
 			input.close();
+
+			StringBuilder sb = new StringBuilder();
+    		for (byte b : buf) {
+        		sb.append(String.format("%02X ", b));
+    		}
 			//append the bytes read to keyStr
-			keyStr.append(buf);
+			keyStr.append(sb);
+			System.out.println("Key read: " + sb);
 
 		} catch (FileNotFoundException e) {
 			System.err.println("File " + fileName + " could not be opened!");
