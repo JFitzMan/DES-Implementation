@@ -73,17 +73,29 @@ public class DES {
 		try {
 			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
 			String key = keyStr.toString();
-			byte[] keyBytes = (keyStr.toString()).getBytes();
-			//Testing the byte array for consistency
-			/*for(int i=0; i<keyBytes.length;i++) 
-				System.out.print((char) keyBytes[i] + " ");*/
+			
+			String keyBin = new BigInteger(key, 16).toString(2);
+			System.out.println("key in binary: \n" + keyBin);
+			
+			byte[][] subKeys = new byte[16][48];
+			
+			subKeys = makeSubKeys(keyBin);
+			
+			System.out.println("Subkeys:");
+			for(int i=0; i<16; i++){
+				System.out.print("K[" +i +"]: ");
+				for(int k=0; k<48; k++){
+					System.out.print(subKeys[i][k]);
+				}
+				System.out.println();
+			}
 			
 			String encryptedText;
 			for (String line : Files.readAllLines(Paths.get(inputFile.toString()), Charset.defaultCharset())) {
 				encryptedText = DES_encrypt(line);
 				writer.print(encryptedText);
 			}
-			encryptedText = DES_encrypt(NULL);
+			encryptedText = DES_encrypt(null);
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -141,6 +153,80 @@ public class DES {
 		return toReturn;
 	}//bytesToBitSet
 
+	static byte[][] makeSubKeys(String keyBin){
+	
+		byte[] C0 = new byte[28];
+		byte[] D0 = new byte[28];
+		byte[][] C = new byte[16][28];
+		byte[][] D = new byte[16][28];
+		byte[][] CD = new byte[16][56];
+		byte[][] subKeys = new byte[16][48];
+		System.out.println("First permutation:");
+		int i=0;
+		for(i=0; i<28; i++){
+			if(keyBin.charAt(PC1[i]-1) == '1'){
+				C0[i]=1;
+				System.out.print(C0[i]);
+			} else {
+				C0[i]=0;
+				System.out.print(C0[i]);
+			}
+		}
+		
+		for(i=28; i<56; i++){
+			if(keyBin.charAt(PC1[i]-1) == '1'){
+				D0[i-28]=1;
+				System.out.print(D0[i-28]);
+			} else {
+				D0[i-28]=0;
+				System.out.print(D0[i-28]);
+			}
+		}
+		
+		C[0] = leftShift(C0, rotations[0]);
+		D[0] = leftShift(D0, rotations[0]);
+		
+		System.out.println("\nShifts: ");
+		for(i=1; i<16; i++){
+			C[i] = leftShift(C[i-1], rotations[i]);
+			D[i] = leftShift(D[i-1], rotations[i]);
+		}
+		
+		for(i=0; i<16; i++){
+			System.out.print("C[" +i +"]: ");
+			for(int k=0; k<28; k++){
+				System.out.print(C[i][k]);
+			}
+			System.out.print(" + D[" +i +"]: ");
+			for(int j=0; j<28; j++){
+				System.out.print(D[i][j]);
+			}
+			System.out.println();
+		}
+	
+		for(i=0; i<16; i++){
+			System.arraycopy(C[i], 0, CD[i], 0, 28);
+			System.arraycopy(D[i], 0, CD[i], 28, 28);
+			for(int k=0; k<48; k++){
+				subKeys[i][k] = CD[i][PC2[k]-1];
+			}
+		}
+		
+		return subKeys;
+	}
+	
+	static byte[] leftShift(byte[] bits, int numShifts){
+		byte shifted[] = new byte[bits.length];
+		System.arraycopy(bits, 0, shifted, 0, bits.length);
+		for(int i=0; i<numShifts; i++){
+			byte temp = shifted[0];
+			for(int k=0; k<bits.length-1; k++)
+				shifted[k] = shifted[k+1];
+			shifted[bits.length-1]=temp;
+		}
+		return shifted;
+	}
+	
 	/*
 	* Generates a random key. Saves the hex representation as a string to keyStr
 	* Writes the bytes to the file key.k
@@ -158,7 +244,7 @@ public class DES {
 
     		StringBuilder sb = new StringBuilder();
     		for (byte b : bytes) {
-        		sb.append(String.format("%02x ", b));
+        		sb.append(String.format("%02x", b));
     		}
 
     		System.out.println(sb);
@@ -269,7 +355,7 @@ public class DES {
 
 			StringBuilder sb = new StringBuilder();
     		for (byte b : buf) {
-        		sb.append(String.format("%02X ", b));
+        		sb.append(String.format("%02x", b));
     		}
 			//append the bytes read to keyStr
 			keyStr.append(sb);
