@@ -76,8 +76,11 @@ public class DES {
 			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
 
 			String key = keyStr.toString();
-
-			String keyBin = new BigInteger(key, 16).toString(2); //Found code on StackExchange to convert a hex string to binary
+			String keyBin = "";
+			keyBin = new BigInteger(key, 16).toString(2); //Found code on StackExchange to convert a hex string to binary
+			while (keyBin.length() < 64){ //Add leading zeroes back in
+				keyBin = "0"+keyBin;
+			}
 			System.out.println("key in binary: \n" + keyBin);
 			
 			byte[][] subKeys = new byte[16][48]; 
@@ -246,6 +249,11 @@ public class DES {
 		byte[][] CD = new byte[16][56]; //Array that puts the halves together
 		byte[][] subKeys = new byte[16][48]; //Array that holds permuted subkeys
 		
+		for(int i=0; i<28; i++){
+			C0[i]=1;
+			D0[i]=0;
+		}		
+		
 		//Make the first permutation 
 		System.out.println("First permutation (C0 + D0): ");
 		int i=0;
@@ -306,12 +314,13 @@ public class DES {
 	
 	static byte[] leftShift(byte[] toShift, int numShifts){ //Made this function's parameters basic so we can use again if necessary
 		byte shifted[] = new byte[toShift.length]; 			//Make a new byte, the one that's going to be shifted
-		System.arraycopy(toShift, 0, shifted, 0, toShift.length); //Copy the provided byte to it (Had to look up how to copy arrays -- surprisingly easy!
+		//Copy the provided byte to it (Had to look up how to copy arrays -- surprisingly easy!
 		for(int i=0; i<numShifts; i++){
-			byte temp = shifted[0]; 						//Move everything over one! Hold the first position temporarily.
+					//Move everything over one! Hold the first position temporarily.
 			for(int k=0; k<toShift.length-1; k++)
-				shifted[k] = shifted[k+1];
-			shifted[toShift.length-1]=temp;					//Put that temporarily held bit back, in the last position
+				shifted[k] = toShift[k+1];
+			shifted[toShift.length-1]=toShift[0];					//Put that temporarily held bit back, in the last position
+			System.arraycopy(shifted, 0, toShift, 0, shifted.length);
 		}
 		return shifted; 									//Send the fancy new shifted byte back over
 	}
