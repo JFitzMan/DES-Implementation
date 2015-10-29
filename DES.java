@@ -210,7 +210,74 @@ public class DES {
 
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
 	private static BitSet encrypt64Bits(BitSet input, byte[][] subkeys){
+	
+		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
+		//permutate all inpute through table IP
+		BitSet permutedBits = permute (input, IP);
+
+		System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
+
+		//get left and right halves
+
+		//16 iterations using function f that operates on two blocks
+			//f input: data of 32 bits and a key of 48 bits
+			//f output: block of 32 bits
+
+			//new r = xor(L, f(R, subkey[i]))
+			//new L = R before xor
+
+		//swap halves after rounds
+
+		//apply FP table to output
+
+		//return encrypted bits
+
 		return input;
+	}
+
+	/*
+	public static int[] IP = {
+		58, 50, 42, 34, 26, 18, 10, 2
+		, 60, 52, 44, 36, 28, 20, 12, 4
+		, 62, 54, 46, 38, 30, 22, 14, 6
+		, 64, 56, 48, 40, 32, 24, 16, 8
+		, 57, 49, 41, 33, 25, 17, 9, 1
+		, 59, 51, 43, 35, 27, 19, 11, 3
+		, 61, 53, 45, 37, 29, 21, 13, 5
+		, 63, 55, 47, 39, 31, 23, 15, 7
+	};
+	*/
+
+	private static BitSet permute(BitSet in, int [] permuteTable){
+
+		int numberOfBits = permuteTable.length -1;
+		BitSet output = new BitSet(numberOfBits);
+
+		for (int i = 0; i < permuteTable.length; i++){
+			//get the value of the first bit
+			boolean bitValue = in.get(i);
+			//set the permuteTable[i] bit of output to that value.
+			output.set(permuteTable[i], bitValue);
+		}
+
+		return output;
+
+	}
+
+
+
+	private static String getBitSetString(BitSet input){
+
+		StringBuilder output = new StringBuilder();
+
+		for (int i = 0; i < input.length(); i++){
+			if ( input.get(i) ) {
+				output.append("1");
+			} else{
+				output.append("0");
+			}
+		}
+		return output.toString();
 	}
 
 	/*
