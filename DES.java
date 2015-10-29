@@ -84,7 +84,7 @@ public class DES {
 			//Just prints out the Subkeys, eventually won't be needed
 			System.out.println("Subkeys:");
 			for(int i=0; i<16; i++){
-				System.out.print("K[" +i +"]: ");
+				System.out.print("K[" + (i+1) +"]: ");
 				for(int k=0; k<48; k++){
 					System.out.print(subKeys[i][k]);
 				}
@@ -164,7 +164,7 @@ public class DES {
 		byte[][] subKeys = new byte[16][48]; //Array that holds permuted subkeys
 		
 		//Make the first permutation 
-		System.out.println("First permutation:");
+		System.out.println("First permutation (C0 + D0): ");
 		int i=0;
 		for(i=0; i<28; i++){
 			if(keyBin.charAt(PC1[i]-1) == '1'){ //PC1[i]-1 because of array math :P
@@ -198,11 +198,11 @@ public class DES {
 		
 		//Just printing out the left shifted sub-subkeys, won't need eventually
 		for(i=0; i<16; i++){
-			System.out.print("C[" +i +"]: ");
+			System.out.print("C[" + (i+1) +"]: ");
 			for(int k=0; k<28; k++){
 				System.out.print(C[i][k]);
 			}
-			System.out.print(" + D[" +i +"]: ");
+			System.out.print(" + D[" + (i+1) +"]: ");
 			for(int j=0; j<28; j++){
 				System.out.print(D[i][j]);
 			}
@@ -223,7 +223,7 @@ public class DES {
 	
 	static byte[] leftShift(byte[] toShift, int numShifts){ //Made this function's parameters basic so we can use again if necessary
 		byte shifted[] = new byte[toShift.length]; 			//Make a new byte, the one that's going to be shifted
-		System.arraycopy(toShift, 0, shifted, 0, toShift.length); //Copy the provided byte to it
+		System.arraycopy(toShift, 0, shifted, 0, toShift.length); //Copy the provided byte to it (Had to look up how to copy arrays -- surprisingly easy!
 		for(int i=0; i<numShifts; i++){
 			byte temp = shifted[0]; 						//Move everything over one! Hold the first position temporarily.
 			for(int k=0; k<toShift.length-1; k++)
