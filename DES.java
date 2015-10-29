@@ -234,7 +234,7 @@ public class DES {
 			right = roundFunction(right, subkeys[i]);
 
 			//new r = xor(L, f(R, subkey[i]))
-			right = right.xor(left);
+			//right = right.xor(left);
 			left = rightTemp;
 			//new L = R before xor
 		}
@@ -251,7 +251,7 @@ public class DES {
 	}
 
 	private static BitSet roundFunction(BitSet input, BitSet key){
-
+		return input;
 	}
 
 	/*
@@ -286,12 +286,18 @@ public class DES {
 	private static String getBitSetString(BitSet input){
 
 		StringBuilder output = new StringBuilder();
+		int count = 0;
 
 		for (int i = 0; i < input.length(); i++){
 			if ( input.get(i) ) {
 				output.append("1");
 			} else{
 				output.append("0");
+			}
+			count ++;
+			if (count == 4){
+				output.append(" ");
+				count = 0;
 			}
 		}
 		return output.toString();
