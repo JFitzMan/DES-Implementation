@@ -212,23 +212,29 @@ public class DES {
 	private static BitSet encrypt64Bits(BitSet input, byte[][] subkeys){
 	
 		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
+
 		//permutate all inpute through table IP
 		BitSet permutedBits = permute (input, IP);
-
 		System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
 
 		//get left and right halves
+		BitSet left = permutedBits.get(0, permutedBits.length()/2);
+		BitSet right = permutedBits.get(permutedBits.length()/2, permutedBits.length());
 
 		//16 iterations using function f that operates on two blocks
+		for (int i = 0; i < 16; i++){
 			//f input: data of 32 bits and a key of 48 bits
 			//f output: block of 32 bits
+			
 
 			//new r = xor(L, f(R, subkey[i]))
 			//new L = R before xor
+		}
 
 		//swap halves after rounds
 
 		//apply FP table to output
+
 
 		//return encrypted bits
 
