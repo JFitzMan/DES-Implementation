@@ -118,7 +118,7 @@ public class DES {
 				if (count == 8){
 
 					//get encrypted bitset
-					encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt));
+					encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt), subKeys);
 					//get encrypted bytes
 					encryptedBytes = encryptedBits.toByteArray();
 					//get encryped string
@@ -152,7 +152,7 @@ public class DES {
 			if (!toEncryptIsEmpty){
 
 				//get encrypted bitset
-				encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt));
+				encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt), subKeys);
 				//get encrypted bytes
 				encryptedBits.clear(amountOfBytesInToEncrypt*8, 64);
 				byte [] someEncryptedBytes = encryptedBits.toByteArray();
@@ -209,7 +209,7 @@ public class DES {
 	}
 
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
-	private static BitSet encrypt64Bits(BitSet input){
+	private static BitSet encrypt64Bits(BitSet input, byte[][] subkeys){
 		return input;
 	}
 
