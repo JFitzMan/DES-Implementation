@@ -84,8 +84,12 @@ public class DES {
 			System.out.println("key in binary: \n" + keyBin);
 			
 			byte[][] subKeys = new byte[16][48]; 
-			
+			BitSet[] subKeyBits = new BitSet[16];
+			for(int i=0; i<16; i++)
+				subKeyBits[i] = new BitSet(48);
+				
 			subKeys = makeSubKeys(keyBin); //Pass the binary key along
+			subKeyBits = keysToBits(subKeys);
 			
 			//Just prints out the Subkeys, eventually won't be needed
 			System.out.println("Subkeys:");
@@ -185,6 +189,7 @@ public class DES {
 
 		
 	}
+	
 	/**
 	 * TODO: You need to write the DES encryption here.
 	 * This is going to collect bytes until it forms a new line
@@ -270,8 +275,6 @@ public class DES {
 
 	}
 
-
-
 	private static String getBitSetString(BitSet input){
 
 		StringBuilder output = new StringBuilder();
@@ -340,6 +343,8 @@ public class DES {
 				D0[i-28]=1;
 				} else	D0[i-28]=0;
 		}
+		
+		//Print out permutation halves
 		System.out.print("C0: ");
 		for(i=0; i<28; i++)
 			System.out.print(C0[i]);
@@ -386,7 +391,6 @@ public class DES {
 				subKeys[i][k] = CD[i][PC2[k]-1]; 		//Permute with PC2 and copy over to subkey array. Once again, PC[k]-1 because array math
 			}
 		}
-		
 		return subKeys; 
 	}
 	
@@ -400,6 +404,21 @@ public class DES {
 			shifted[toShift.length-1] = temp;				//Put that temporarily held bit back, in the last position
 		}
 		return shifted; 									//Send the fancy new shifted byte back over
+	}
+	
+	static BitSet[] keysToBits(byte[][] subKeys){
+		BitSet[] subKeyBits = new BitSet[16];
+		for(int i=0; i<16; i++)
+			subKeyBits[i] = new BitSet(48);
+			
+		for(int i=0; i<subKeys.length; i++){
+			for(int k=0; k<48; k++){
+				if(subKeys[i][k] == 1)
+					subKeyBits[i].set(k);
+			}		
+		}
+		
+		return subKeyBits;	
 	}
 	
 	/*
