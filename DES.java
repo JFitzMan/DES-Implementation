@@ -131,7 +131,7 @@ public class DES {
 				if (count == 8){
 
 					//get encrypted bitset
-					encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt), subKeys);
+					encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt), subKeyBits);
 					//get encrypted bytes
 					encryptedBytes = encryptedBits.toByteArray();
 					//get encryped string
@@ -165,7 +165,7 @@ public class DES {
 			if (!toEncryptIsEmpty){
 
 				//get encrypted bitset
-				encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt), subKeys);
+				encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt), subKeyBits);
 				//get encrypted bytes
 				encryptedBits.clear(amountOfBytesInToEncrypt*8, 64);
 				byte [] someEncryptedBytes = encryptedBits.toByteArray();
@@ -223,7 +223,7 @@ public class DES {
 	}
 
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
-	private static BitSet encrypt64Bits(BitSet input, byte[][] subkeys){
+	private static BitSet encrypt64Bits(BitSet input, BitSet[] subkeys){
 	
 		//System.out.println("Initial bits to encrypt: " + getBitSetString(input));
 
@@ -237,21 +237,29 @@ public class DES {
 
 		//16 iterations using function f that operates on two blocks
 		for (int i = 0; i < 16; i++){
+			BitSet rightTemp = right;
 			//f input: data of 32 bits and a key of 48 bits
 			//f output: block of 32 bits
-			
+			right = roundFunction(right, subkeys[i]);
 
 			//new r = xor(L, f(R, subkey[i]))
+			//right = right.xor(left);
+			left = rightTemp;
 			//new L = R before xor
 		}
 
 		//swap halves after rounds
+		
 
 		//apply FP table to output
 
 
 		//return encrypted bits
 
+		return input;
+	}
+
+	private static BitSet roundFunction(BitSet input, BitSet key){
 		return input;
 	}
 
@@ -287,12 +295,18 @@ public class DES {
 	private static String getBitSetString(BitSet input){
 
 		StringBuilder output = new StringBuilder();
+		int count = 0;
 
 		for (int i = 0; i < input.length(); i++){
 			if ( input.get(i) ) {
 				output.append("1");
 			} else{
 				output.append("0");
+			}
+			count ++;
+			if (count == 4){
+				output.append(" ");
+				count = 0;
 			}
 		}
 		return output.toString();
