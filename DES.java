@@ -229,10 +229,13 @@ public class DES {
 			right = roundFunction(right, subkeys[i]);
 
 			//new r = xor(L, f(R, subkey[i]))
+			right = right.xor(left);
+			left = rightTemp;
 			//new L = R before xor
 		}
 
 		//swap halves after rounds
+		
 
 		//apply FP table to output
 
