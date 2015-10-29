@@ -123,7 +123,7 @@ public class DES {
 					//print the hex representation of he encrypted bits
 					StringBuilder sb = new StringBuilder();
     				for (byte b : toEncrypt) {
-        				sb.append(String.format("%02x ", b));
+        				sb.append(String.format("%02x", b));
     				}//end for
     				System.out.println(sb);
 
@@ -164,7 +164,7 @@ public class DES {
 				//print the hex representation of he encrypted bits
 				StringBuilder sb = new StringBuilder();
     			for ( int i = 0; i < 8; i++) {
-        			sb.append(String.format("%02x ", encryptedBytes[i]));
+        			sb.append(String.format("%02x", encryptedBytes[i]));
     			}
     			System.out.println(sb);
     		}//end if
