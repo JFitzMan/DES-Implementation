@@ -10,6 +10,8 @@ import java.util.BitSet;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
+import java.util.ArrayList;
+
 import gnu.getopt.Getopt;
 
 
@@ -72,19 +74,104 @@ public class DES {
 		
 		try {
 			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
+
 			String key = keyStr.toString();
 			byte[] keyBytes = (keyStr.toString()).getBytes();
 			//Testing the byte array for consistency
 			/*for(int i=0; i<keyBytes.length;i++) 
 				System.out.print((char) keyBytes[i] + " ");*/
+
+			/*
 			
 			String encryptedText;
 			for (String line : Files.readAllLines(Paths.get(inputFile.toString()), Charset.defaultCharset())) {
 				encryptedText = DES_encrypt(line);
 				writer.print(encryptedText);
 			}
-			encryptedText = DES_encrypt(NULL);
+			//alert the function that there will be no more input coming in
+			encryptedText = DES_encrypt(null);
+			writer.print(encryptedText);
 			writer.close();
+
+			*/
+			File file = new File(inputFile.toString());
+			FileInputStream byteStream = new FileInputStream(file);
+
+			byte [] toEncrypt = new byte [8];
+			boolean toEncryptIsEmpty = true;
+			byte nextByte;
+			BitSet encryptedBits = new BitSet(64);
+			byte [] encryptedBytes = new byte[8];
+			int count = 0;
+			String encryptedText;
+			int amountOfBytesInToEncrypt = 0;
+
+			while ( (nextByte = (byte) byteStream.read()) != -1){
+				//if toEncrypt is full, encrypt them, print encrypted bytes,
+				// store nextByte in toEncrypt[0], and leave with the count at 1
+				if (count == 8){
+
+					//get encrypted bitset
+					encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt));
+					//get encrypted bytes
+					encryptedBytes = encryptedBits.toByteArray();
+					//get encryped string
+					encryptedText = new String (encryptedBytes, "UTF-8");
+					//write encryped string to the output file
+					writer.write(encryptedText);
+
+					//print the hex representation of he encrypted bits
+					StringBuilder sb = new StringBuilder();
+    				for (byte b : toEncrypt) {
+        				sb.append(String.format("%02x ", b));
+    				}//end for
+    				System.out.println(sb);
+
+					count = 0;
+					amountOfBytesInToEncrypt = 0;
+					//System.out.println("After Block");
+
+					toEncryptIsEmpty = true;
+				}//end if
+
+				toEncrypt[count] = nextByte;
+				toEncryptIsEmpty = false;
+				count ++;
+				amountOfBytesInToEncrypt++;
+			}//end while
+
+			byteStream.close();
+
+			//DO STUFF WITH THE EXTRA LEFT OVER IN TO ENCRYPT BEFORE CLOSING WRITER
+			if (!toEncryptIsEmpty){
+
+				//get encrypted bitset
+				encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt));
+				//get encrypted bytes
+				encryptedBits.clear(amountOfBytesInToEncrypt*8, 64);
+				byte [] someEncryptedBytes = encryptedBits.toByteArray();
+				for (int i = 0; i < amountOfBytesInToEncrypt; i++){
+					encryptedBytes[i] = someEncryptedBytes[i];
+				}
+				for (int i = amountOfBytesInToEncrypt; i < 8; i ++){
+					encryptedBytes[i] = 0;
+				}
+				//get encryped string
+				encryptedText = new String (encryptedBytes, "UTF-8");
+				//write encryped string to the output file
+				writer.write(encryptedText);
+
+				//print the hex representation of he encrypted bits
+				StringBuilder sb = new StringBuilder();
+    			for ( int i = 0; i < 8; i++) {
+        			sb.append(String.format("%02x ", encryptedBytes[i]));
+    			}
+    			System.out.println(sb);
+    		}//end if
+			
+
+			writer.close();
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -98,17 +185,26 @@ public class DES {
 	 *
 	 * At that point, its going to call encrypt64bits, get the enrypted bits, and return them.
 	 *
-	 * When the input arg line == NULL, it will need to prepare a buffer before sending whats
+	 * When the input arg line == null, it will need to prepare a buffer before sending whats
 	 * left to the encrypt64bits function
 	 * @param line
 	 */
 	private static String DES_encrypt(String line) {
+		//check to see if this is the last line
+		if (line == null){
+			//pad toEncrpt with 00s and encrypt it
+		}
+		//process line into toEncrypt String
+		else{
+			byte [] newLine = line.getBytes(); 
+
+		}
 		return "";
 	}
 
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
-	private static BitSet encrypt64Bits(BitSet input, byte[][] subkey){
-		return new BitSet();
+	private static BitSet encrypt64Bits(BitSet input){
+		return input;
 	}
 
 	/*
