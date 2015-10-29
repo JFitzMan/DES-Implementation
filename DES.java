@@ -74,13 +74,14 @@ public class DES {
 			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
 			String key = keyStr.toString();
 			
-			String keyBin = new BigInteger(key, 16).toString(2);
+			String keyBin = new BigInteger(key, 16).toString(2); //Found code on StackExchange to convert a hex string to binary
 			System.out.println("key in binary: \n" + keyBin);
 			
-			byte[][] subKeys = new byte[16][48];
+			byte[][] subKeys = new byte[16][48]; 
 			
-			subKeys = makeSubKeys(keyBin);
+			subKeys = makeSubKeys(keyBin); //Pass the binary key along
 			
+			//Just prints out the Subkeys, eventually won't be needed
 			System.out.println("Subkeys:");
 			for(int i=0; i<16; i++){
 				System.out.print("K[" +i +"]: ");
@@ -155,25 +156,28 @@ public class DES {
 
 	static byte[][] makeSubKeys(String keyBin){
 	
-		byte[] C0 = new byte[28];
+		byte[] C0 = new byte[28]; //Bytes for first permutation
 		byte[] D0 = new byte[28];
-		byte[][] C = new byte[16][28];
+		byte[][] C = new byte[16][28]; //Arrays for two halves of eventual subkey generation
 		byte[][] D = new byte[16][28];
-		byte[][] CD = new byte[16][56];
-		byte[][] subKeys = new byte[16][48];
+		byte[][] CD = new byte[16][56]; //Array that puts the halves together
+		byte[][] subKeys = new byte[16][48]; //Array that holds permuted subkeys
+		
+		//Make the first permutation 
 		System.out.println("First permutation:");
 		int i=0;
 		for(i=0; i<28; i++){
-			if(keyBin.charAt(PC1[i]-1) == '1'){
-				C0[i]=1;
-				System.out.print(C0[i]);
+			if(keyBin.charAt(PC1[i]-1) == '1'){ //PC1[i]-1 because of array math :P
+				C0[i]=1; 						//Can't actually just copy the contents of the character because chars can't into bytes
+				System.out.print(C0[i]);		//This is the next best thing
 			} else {
 				C0[i]=0;
 				System.out.print(C0[i]);
 			}
 		}
 		
-		for(i=28; i<56; i++){
+		//Same thing down here, but for the second half of the permutation. That's why i starts at 28.
+		for(i=28; i<56; i++){				
 			if(keyBin.charAt(PC1[i]-1) == '1'){
 				D0[i-28]=1;
 				System.out.print(D0[i-28]);
@@ -183,15 +187,16 @@ public class DES {
 			}
 		}
 		
-		C[0] = leftShift(C0, rotations[0]);
+		System.out.println("\nShifts: ");
+		C[0] = leftShift(C0, rotations[0]); 	//Do the first left shifts
 		D[0] = leftShift(D0, rotations[0]);
 		
-		System.out.println("\nShifts: ");
-		for(i=1; i<16; i++){
+		for(i=1; i<16; i++){ 					//Do the rest of the left shifts
 			C[i] = leftShift(C[i-1], rotations[i]);
 			D[i] = leftShift(D[i-1], rotations[i]);
 		}
 		
+		//Just printing out the left shifted sub-subkeys, won't need eventually
 		for(i=0; i<16; i++){
 			System.out.print("C[" +i +"]: ");
 			for(int k=0; k<28; k++){
@@ -204,27 +209,28 @@ public class DES {
 			System.out.println();
 		}
 	
+		//Merge the sub-subkey arrays together, one by one
 		for(i=0; i<16; i++){
-			System.arraycopy(C[i], 0, CD[i], 0, 28);
-			System.arraycopy(D[i], 0, CD[i], 28, 28);
+			System.arraycopy(C[i], 0, CD[i], 0, 28); 	//First half of each array, spots [0-28] are the C half
+			System.arraycopy(D[i], 0, CD[i], 28, 28);	//Spots [29-56] are the D half
 			for(int k=0; k<48; k++){
-				subKeys[i][k] = CD[i][PC2[k]-1];
+				subKeys[i][k] = CD[i][PC2[k]-1]; 		//Permute with PC2 and copy over to subkey array. Once again, PC[k]-1 because array math
 			}
 		}
 		
-		return subKeys;
+		return subKeys; 
 	}
 	
-	static byte[] leftShift(byte[] bits, int numShifts){
-		byte shifted[] = new byte[bits.length];
-		System.arraycopy(bits, 0, shifted, 0, bits.length);
+	static byte[] leftShift(byte[] toShift, int numShifts){ //Made this function's parameters basic so we can use again if necessary
+		byte shifted[] = new byte[toShift.length]; 			//Make a new byte, the one that's going to be shifted
+		System.arraycopy(toShift, 0, shifted, 0, toShift.length); //Copy the provided byte to it
 		for(int i=0; i<numShifts; i++){
-			byte temp = shifted[0];
-			for(int k=0; k<bits.length-1; k++)
+			byte temp = shifted[0]; 						//Move everything over one! Hold the first position temporarily.
+			for(int k=0; k<toShift.length-1; k++)
 				shifted[k] = shifted[k+1];
-			shifted[bits.length-1]=temp;
+			shifted[toShift.length-1]=temp;					//Put that temporarily held bit back, in the last position
 		}
-		return shifted;
+		return shifted; 									//Send the fancy new shifted byte back over
 	}
 	
 	/*
