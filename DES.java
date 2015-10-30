@@ -89,9 +89,6 @@ public class DES {
 				subKeyBits[i] = new BitSet(48);
 				
 			subKeys = makeSubKeys(keyBin); //Pass the binary key along
-			subKeyBits = keysToBits(subKeys);
-			
-			//Just prints out the Subkeys, eventually won't be needed
 			System.out.println("Subkeys:");
 			for(int i=0; i<16; i++){
 				System.out.print("K[");
@@ -102,14 +99,16 @@ public class DES {
 					System.out.print(subKeys[i][k]);
 				}
 				System.out.println();
-			}
+			}		
+			
+			subKeyBits = keysToBits(subKeys);			
 			System.out.println();
 			for(int i=0; i<16; i++){
 				System.out.print("K[");
 				if(i<9) System.out.print("0"+(i+1));
 				else System.out.print(i+1);
 				System.out.print("]: ");
-				System.out.println(getBitSetString(subKeyBits[i]));
+				System.out.println(getBitSetString(subKeyBits[i]) + "\tLength: " + subKeyBits[i].length());
 			}
 			
 
@@ -297,10 +296,10 @@ public class DES {
 		StringBuilder output = new StringBuilder();
 		int count = 0;
 
-		for (int i = 0; i < input.length(); i++){
-			if ( input.get(i) ) {
+		for (int i = 0; i < input.length()-1; i++){
+			if ( input.get(i) == true ) {
 				output.append("1");
-			} else{
+			} else if (input.get(i) == false ){
 				output.append("0");
 			}
 			count ++;
@@ -434,15 +433,18 @@ public class DES {
 	
 	static BitSet[] keysToBits(byte[][] subKeys){
 		BitSet[] subKeyBits = new BitSet[16];
-		for(int i=0; i<16; i++)
-			subKeyBits[i] = new BitSet(48);
-			
+		for(int i=0; i<16; i++){
+			subKeyBits[i] = new BitSet(49);
+			subKeyBits[i].set(48, true);
+		}
+		
 		for(int i=0; i<subKeys.length; i++){
 			for(int k=0; k<48; k++){
 				if(subKeys[i][k] == 1)
-					subKeyBits[i].set(k);
-				else subKeyBits[i].clear(k);
-			}		
+					subKeyBits[i].set(k, true);
+				else if(subKeys[i][k] ==0) 
+					subKeyBits[i].set(k, false);
+			}
 		}
 		
 		return subKeyBits;	
