@@ -122,8 +122,9 @@ public class DES {
 				if (count == 8){
 
 					//get encrypted bitset
-					encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt), subKeyBits);
+					encryptedBits = encrypt64Bits(bytesToBitSet(toEncrypt), subKeyBits);
 					//get encrypted bytes
+					System.out.println(encryptedBits.length());
 					encryptedBytes = encryptedBits.toByteArray();
 					//get encryped string
 					encryptedText = new String (encryptedBytes, "UTF-8");
@@ -156,7 +157,7 @@ public class DES {
 			if (!toEncryptIsEmpty){
 
 				//get encrypted bitset
-				encryptedBits = encrypt64Bits(BitSet.valueOf(toEncrypt), subKeyBits);
+				encryptedBits = encrypt64Bits(bytesToBitSet(toEncrypt), subKeyBits);
 				//get encrypted bytes
 				encryptedBits.clear(amountOfBytesInToEncrypt*8, 64);
 				byte [] someEncryptedBytes = encryptedBits.toByteArray();
@@ -217,37 +218,70 @@ public class DES {
 	private static BitSet encrypt64Bits(BitSet input, BitSet[] subkeys){
 	
 		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
+		System.out.println("Initial size: " + input.length());
 
 		//permutate all inpute through table IP
 		BitSet permutedBits = permute (input, IP);
 		System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
 
 		//get left and right halves
-		BitSet left = permutedBits.get(0, permutedBits.length()/2);
-		BitSet right = permutedBits.get(permutedBits.length()/2, permutedBits.length());
+		//BitSet left = permutedBits.get(0, permutedBits.length()/2);
+		//BitSet right = permutedBits.get(permutedBits.length()/2, permutedBits.length());
+		BitSet left = new BitSet(33);
+		BitSet right = new BitSet(33);
+		for(int i = 0; i < 32; i ++){
+			if (permutedBits.get(i)){
+				left.set(i);
+			}
+			if(permutedBits.get(i+32)){
+				right.set(i);
+			}
+		}
+		right.set(32);
+		left.set(32);
+		System.out.println("Left:  " + getBitSetString(left));
+		System.out.println("Right: " + getBitSetString(right));
+		
 
 		//16 iterations using function f that operates on two blocks
 		for (int i = 0; i < 16; i++){
 			BitSet rightTemp = right;
 			//f input: data of 32 bits and a key of 48 bits
 			//f output: block of 32 bits
-			right = roundFunction(right, subkeys[i]);
+			//right = roundFunction(right, subkeys[i]);
 
 			//new r = xor(L, f(R, subkey[i]))
 			//right = right.xor(left);
-			left = rightTemp;
+			//left = rightTemp;
 			//new L = R before xor
 		}
 
-		//swap halves after rounds
-		
+		//reverse halves after rounds
+		BitSet bitsAfterRounds = new BitSet(65);//+1 to account for zeros not printing
+		for(int i = 0; i < 65; i++){
+			//first half to be concatenated, right (reversed on purpose)
+			if (i < 32){
+				if(right.get(i))
+					bitsAfterRounds.set(i);
+			}
+			//second half, left
+			else{
+				if(left.get(i-32))
+					bitsAfterRounds.set(i);
+			}
+		}
+		bitsAfterRounds.set(64);
+		System.out.println("Bits after 16 rounds: " + getBitSetString(bitsAfterRounds));
+
+
 
 		//apply FP table to output
-
+		BitSet bitsToReturn = permute(bitsAfterRounds, FP);
+		System.out.println("Bits after FP: " + getBitSetString(bitsToReturn));
 
 		//return encrypted bits
 
-		return input;
+		return bitsToReturn;
 	}
 
 	private static BitSet roundFunction(BitSet input, BitSet key){
@@ -269,7 +303,7 @@ public class DES {
 
 	private static BitSet permute(BitSet in, int [] permuteTable){
 
-		int numberOfBits = permuteTable.length -1;
+		int numberOfBits = permuteTable.length;
 		BitSet output = new BitSet(numberOfBits);
 
 		for (int i = 0; i < permuteTable.length; i++){
@@ -278,7 +312,7 @@ public class DES {
 			//set the permuteTable[i] bit of output to that value.
 			output.set(permuteTable[i], bitValue);
 		}
-
+		output.set(permuteTable.length);
 		return output;
 
 	}
@@ -288,7 +322,7 @@ public class DES {
 		StringBuilder output = new StringBuilder();
 		int count = 0;
 
-		for (int i = 0; i < input.length(); i++){
+		for (int i = 0; i < input.length()-1; i++){
 			if ( input.get(i) ) {
 				output.append("1");
 			} else{
@@ -310,7 +344,7 @@ public class DES {
 	private static BitSet bytesToBitSet(byte[] input){
 
 		//each byte has 8 bits in the bitset
-		BitSet toReturn = new BitSet(input.length * 8);
+		BitSet toReturn = new BitSet(input.length * 8 + 1);
 		int curIndex = 0;
 
 		//this loop iterates over the bytes
@@ -330,6 +364,7 @@ public class DES {
 			curIndex += 8;
 		}
 		//return new bitset
+		toReturn.set(input.length * 8);
 		return toReturn;
 	}//bytesToBitSet
 
