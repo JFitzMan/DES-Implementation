@@ -180,7 +180,7 @@ public class DES {
 	}
 
 	private static BitSet decrypt64Bits(BitSet input, BitSet[] subkeys){
-		System.out.println("Initial bits to decrypt: " + getBitSetString(input));
+		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
 		//System.out.println("Initial size: " + input.length());
 
 
@@ -213,7 +213,7 @@ public class DES {
 			BitSet rightTemp = right;
 			//f input: data of 32 bits and a key of 48 bits
 			//f output: block of 32 bits
-			right = roundFunction(right, subkeys[i]);
+			right = roundFunction(right, subkeys[15-i]);
 
 			//new r = xor(L, f(R, subkey[i]))
 			right.xor(left);
