@@ -89,9 +89,6 @@ public class DES {
 				subKeyBits[i] = new BitSet(48);
 				
 			subKeys = makeSubKeys(keyBin); //Pass the binary key along
-			subKeyBits = keysToBits(subKeys);
-			
-			//Just prints out the Subkeys, eventually won't be needed
 			System.out.println("Subkeys:");
 			for(int i=0; i<16; i++){
 				System.out.print("K[");
@@ -102,7 +99,18 @@ public class DES {
 					System.out.print(subKeys[i][k]);
 				}
 				System.out.println();
+			}		
+			
+			subKeyBits = keysToBits(subKeys);			
+			System.out.println();
+			for(int i=0; i<16; i++){
+				System.out.print("K[");
+				if(i<9) System.out.print("0"+(i+1));
+				else System.out.print(i+1);
+				System.out.print("]: ");
+				System.out.println(getBitSetString(subKeyBits[i]) + "\tLength: " + subKeyBits[i].length());
 			}
+			
 
 			File file = new File(inputFile.toString());
 			FileInputStream byteStream = new FileInputStream(file);
@@ -216,13 +224,13 @@ public class DES {
 
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
 	private static BitSet encrypt64Bits(BitSet input, BitSet[] subkeys){
-	
-		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
+			System.out.println("Initial bits to encrypt: " + getBitSetString(input));
 		System.out.println("Initial size: " + input.length());
+
 
 		//permutate all inpute through table IP
 		BitSet permutedBits = permute (input, IP);
-		System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
+		//System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
 
 		//get left and right halves
 		//BitSet left = permutedBits.get(0, permutedBits.length()/2);
@@ -323,9 +331,9 @@ public class DES {
 		int count = 0;
 
 		for (int i = 0; i < input.length()-1; i++){
-			if ( input.get(i) ) {
+			if ( input.get(i) == true ) {
 				output.append("1");
-			} else{
+			} else if (input.get(i) == false ){
 				output.append("0");
 			}
 			count ++;
@@ -378,7 +386,7 @@ public class DES {
 		byte[][] subKeys = new byte[16][48]; //Array that holds permuted subkeys
 		
 		//Make the first permutation 
-		System.out.println("First permutation (C0 + D0): ");
+		//System.out.println("First permutation (C0 + D0): ");
 		int i=0;
 		for(i=0; i<28; i++){
 			if(keyBin.charAt(PC1[i]-1) == '1'){ //PC1[i]-1 because of array math :P
@@ -394,6 +402,7 @@ public class DES {
 		}
 		
 		//Print out permutation halves
+		/*
 		System.out.print("C0: ");
 		for(i=0; i<28; i++)
 			System.out.print(C0[i]);
@@ -401,9 +410,9 @@ public class DES {
 		System.out.print(" D0: ");
 		for(i=0; i<28; i++)
 			System.out.print(D0[i]);
-		
+		*/
 			
-		System.out.println("\nShifts: ");
+		//System.out.println("\nShifts: ");
 		
 		C[0] = leftShift(C0, rotations[0]);
 		D[0] = leftShift(D0, rotations[0]);
@@ -414,6 +423,7 @@ public class DES {
 		}
 		
 		//Just printing out the left shifted sub-subkeys, won't need eventually
+		/*
 		for(i=0; i<16; i++){
 			System.out.print("C[");
 			if(i<10) System.out.print("0"+(i));
@@ -431,6 +441,7 @@ public class DES {
 			}
 			System.out.println();
 		}
+		*/
 	
 		//Merge the sub-subkey arrays together, one by one
 		for(i=0; i<16; i++){
@@ -457,14 +468,18 @@ public class DES {
 	
 	static BitSet[] keysToBits(byte[][] subKeys){
 		BitSet[] subKeyBits = new BitSet[16];
-		for(int i=0; i<16; i++)
-			subKeyBits[i] = new BitSet(48);
-			
+		for(int i=0; i<16; i++){
+			subKeyBits[i] = new BitSet(49);
+			subKeyBits[i].set(48, true);
+		}
+		
 		for(int i=0; i<subKeys.length; i++){
 			for(int k=0; k<48; k++){
 				if(subKeys[i][k] == 1)
-					subKeyBits[i].set(k);
-			}		
+					subKeyBits[i].set(k, true);
+				else if(subKeys[i][k] ==0) 
+					subKeyBits[i].set(k, false);
+			}
 		}
 		
 		return subKeyBits;	
