@@ -121,7 +121,7 @@ public class DES {
 				//if toEncrypt is full, encrypt them, print encrypted bytes,
 				// store nextByte in toEncrypt[0], and leave with the count at 1
 				if (count == 8){
-
+					/*
 					if (isIV){
 						previousBlock = bytesToBitSet(toDecrypt);
 						//previousBlock.set(64);
@@ -133,18 +133,18 @@ public class DES {
     					}//end for
     					System.out.println("IV: " + temp);
 					}
-					else{
+					else{*/
 						//xor with previous block
 						BitSet bitsToDecrypt = bytesToBitSet(toDecrypt);
 
 						System.out.println("nextBitsToDecrypt: " + getBitSetString(bitsToDecrypt));
-						bitsToDecrypt.set(64);
+						//bitsToDecrypt.set(64);
 						//get encrypted bitset
 						decryptedBits = decrypt64Bits(bitsToDecrypt, subKeyBits);
 						//get encrypted bytes
 						//System.out.println(encryptedBits.length());
-						decryptedBits.set(64, false);
-						decryptedBits.xor(previousBlock);
+						//decryptedBits.set(64, false);
+						//decryptedBits.xor(previousBlock);
 						decryptedBytes = decryptedBits.toByteArray();
 						//System.out.println(encryptedBytes.length + encryptedBytes.toString());
 						//get encryped string
@@ -158,7 +158,7 @@ public class DES {
         					sb.append(String.format("%02x", decryptedBytes[i]));
     					}//end for
     					System.out.println(sb);
-    			    }
+    			    //}
 
 					count = 0;
 					//System.out.println("After Block");
@@ -332,7 +332,7 @@ public class DES {
 
 			//random iv has been generated
 			String ivString = new String (iv, "UTF-8");
-			writer.write(iv);
+			//writer.write(iv);
 			BitSet ivBits = bytesToBitSet(iv);
 			//ivBits.set(8);
 
@@ -350,9 +350,9 @@ public class DES {
 				if (count == 8){
 					//xor with previous block
 					BitSet bitsToEncrypt = bytesToBitSet(toEncrypt);
-					bitsToEncrypt.set(64);
-					System.out.println("First block: " + getBitSetString(bitsToEncrypt));
-
+					//bitsToEncrypt.set(64);
+					//System.out.println("First block: " + getBitSetString(bitsToEncrypt));
+					/*
 					if (useIV){
 						useIV = false;
 						bitsToEncrypt.xor(ivBits);
@@ -361,6 +361,7 @@ public class DES {
 					else{
 						bitsToEncrypt.xor(encryptedBits);
 					}
+					*/
 					//get encrypted bitset
 					encryptedBits = encrypt64Bits(bitsToEncrypt, subKeyBits);
 					//get encrypted bytes
@@ -400,10 +401,11 @@ public class DES {
 
 				//xor with previous block
 					BitSet bitsToEncrypt = bytesToBitSet(toEncrypt);
-					bitsToEncrypt.set(64);
+					//bitsToEncrypt.set(64);
 					System.out.println("First block: " + getBitSetString(bitsToEncrypt));
 					System.out.println(" Size:  " + bitsToEncrypt.length());
 
+					/*
 					if (useIV){
 						useIV = false;
 						bitsToEncrypt.xor(ivBits);
@@ -413,7 +415,7 @@ public class DES {
 					}
 					else{
 						bitsToEncrypt.xor(encryptedBits);
-					}
+					}*/
 
 				//get encrypted bitset
 				encryptedBits = encrypt64Bits(bitsToEncrypt, subKeyBits);
