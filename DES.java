@@ -43,6 +43,7 @@ public class DES {
 
 	private static void decrypt(StringBuilder keyStr, StringBuilder inputFile,
 			StringBuilder outputFile) {
+		/*
 		try {
 			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
 			List<String> lines = Files.readAllLines(Paths.get(inputFile.toString()), Charset.defaultCharset());
@@ -57,7 +58,196 @@ public class DES {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		*/
+		try {
+			//PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
+			FileOutputStream writer = new FileOutputStream(outputFile.toString());
+
+			String key = keyStr.toString();
+			String keyBin = "";
+			keyBin = new BigInteger(key, 16).toString(2); //Found code on StackExchange to convert a hex string to binary
+			while (keyBin.length() < 64){ //Add leading zeroes back in
+				keyBin = "0"+keyBin;
+			}
+			System.out.println("key in binary: \n" + keyBin);
+			
+			byte[][] subKeys = new byte[16][48]; 
+			BitSet[] subKeyBits = new BitSet[16];
+			for(int i=0; i<16; i++)
+				subKeyBits[i] = new BitSet(48);
+			
+			subKeys = makeSubKeys(keyBin); //Pass the binary key along
+			/*
+			System.out.println("Subkeys:");
+			for(int i=0; i<16; i++){
+				System.out.print("K[");
+				if(i<9) System.out.print("0"+(i+1));
+				else System.out.print(i+1);
+				System.out.print("]: ");
+				for(int k=0; k<48; k++){
+					System.out.print(subKeys[i][k]);
+				}
+				System.out.println();
+			}		
+			*/
+
+			subKeyBits = keysToBits(subKeys);		
+			/*	
+			System.out.println();
+			for(int i=0; i<16; i++){
+				System.out.print("K[");
+				if(i<9) System.out.print("0"+(i+1));
+				else System.out.print(i+1);
+				System.out.print("]: ");
+				System.out.println(getBitSetString(subKeyBits[i]) + "\tLength: " + subKeyBits[i].length());
+			}
+			*/
+
+			File file = new File(inputFile.toString());
+			FileInputStream byteStream = new FileInputStream(file);
+
+			byte [] toDecrypt = new byte [8];
+			byte nextByte;
+			BitSet decryptedBits = new BitSet(64);
+			byte [] decryptedBytes = new byte[8];
+			int count = 0;
+			String decryptedText;
+			boolean isIV = true;
+			BitSet previousBlock = new BitSet(64);
+
+
+
+			while ( (nextByte = (byte) byteStream.read()) != -1){
+				//if toEncrypt is full, encrypt them, print encrypted bytes,
+				// store nextByte in toEncrypt[0], and leave with the count at 1
+				if (count == 8){
+
+					if (isIV){
+						previousBlock = bytesToBitSet(toDecrypt);
+						//previousBlock.set(64);
+						isIV = false;
+						System.out.println("Got IV: ");
+						StringBuilder temp = new StringBuilder();
+    					for (byte b : toDecrypt) {
+        					temp.append(String.format("%02x", b));
+    					}//end for
+    					System.out.println("IV: " + temp);
+					}
+					else{
+						//xor with previous block
+						BitSet bitsToDecrypt = bytesToBitSet(toDecrypt);
+
+						System.out.println("nextBitsToDecrypt: " + getBitSetString(bitsToDecrypt));
+						bitsToDecrypt.set(64);
+						//get encrypted bitset
+						decryptedBits = decrypt64Bits(bitsToDecrypt, subKeyBits);
+						//get encrypted bytes
+						//System.out.println(encryptedBits.length());
+						decryptedBits.set(64, false);
+						decryptedBits.xor(previousBlock);
+						decryptedBytes = decryptedBits.toByteArray();
+						//System.out.println(encryptedBytes.length + encryptedBytes.toString());
+						//get encryped string
+						decryptedText = new String (decryptedBytes, "UTF-8");
+						//write encryped string to the output file
+						writer.write(decryptedBytes);
+
+						//print the hex representation of he encrypted bits
+						StringBuilder sb = new StringBuilder();
+    					for (int i = 0; i < 8; i++) {
+        					sb.append(String.format("%02x", decryptedBytes[i]));
+    					}//end for
+    					System.out.println(sb);
+    			    }
+
+					count = 0;
+					//System.out.println("After Block");
+
+				}//end if
+
+				toDecrypt[count] = nextByte;
+				count ++;
+			}//end while
+
+			byteStream.close();	
+
+			writer.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private static BitSet decrypt64Bits(BitSet input, BitSet[] subkeys){
+		System.out.println("Initial bits to decrypt: " + getBitSetString(input));
+		//System.out.println("Initial size: " + input.length());
+
+
+		//permutate all inpute through table IP
+		BitSet permutedBits = permute (input, IP);
+		//System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
+
+		//get left and right halves
+		//BitSet left = permutedBits.get(0, permutedBits.length()/2);
+		//BitSet right = permutedBits.get(permutedBits.length()/2, permutedBits.length());
+		BitSet left = new BitSet(33);
+		BitSet right = new BitSet(33);
+		for(int i = 0; i < 32; i ++){
+			if (permutedBits.get(i)){
+				left.set(i);
+			}
+			if(permutedBits.get(i+32)){
+				right.set(i);
+			}
+		}
+		right.set(32);
+		left.set(32);
+		//System.out.println("Left:  " + getBitSetString(left));
+		//System.out.println("Right: " + getBitSetString(right));
 		
+
+		//16 iterations using function f that operates on two blocks
+		for (int i = 0; i < 16; i++){
+			//System.out.println("Round " + (i+1) + " ----------------");
+			BitSet rightTemp = right;
+			//f input: data of 32 bits and a key of 48 bits
+			//f output: block of 32 bits
+			right = roundFunction(right, subkeys[i]);
+
+			//new r = xor(L, f(R, subkey[i]))
+			right.xor(left);
+			right.set(32);
+			//new L = R before xor
+			left = rightTemp;
+		}
+
+		//reverse halves after rounds
+		BitSet bitsAfterRounds = new BitSet(65);//+1 to account for zeros not printing
+		for(int i = 0; i < 65; i++){
+			//first half to be concatenated, right (reversed on purpose)
+			if (i < 32){
+				if(right.get(i))
+					bitsAfterRounds.set(i);
+			}
+			//second half, left
+			else{
+				if(left.get(i-32))
+					bitsAfterRounds.set(i);
+			}
+		}
+		bitsAfterRounds.set(64);
+		//System.out.println("Bits after 16 rounds: " + getBitSetString(bitsAfterRounds));
+
+
+
+		//apply FP table to output
+		BitSet bitsToReturn = permute(bitsAfterRounds, FP);
+		System.out.println("Bits after FP: " + getBitSetString(bitsToReturn));
+
+		//return encrypted bits
+
+		return bitsToReturn;
 	}
 
 	/**
@@ -74,7 +264,8 @@ public class DES {
 			StringBuilder outputFile) {
 		
 		try {
-			PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
+			//PrintWriter writer = new PrintWriter(outputFile.toString(), "UTF-8");
+			FileOutputStream writer = new FileOutputStream(outputFile.toString());
 
 			String key = keyStr.toString();
 			String keyBin = "";
@@ -88,8 +279,9 @@ public class DES {
 			BitSet[] subKeyBits = new BitSet[16];
 			for(int i=0; i<16; i++)
 				subKeyBits[i] = new BitSet(48);
-				
+			
 			subKeys = makeSubKeys(keyBin); //Pass the binary key along
+			/*
 			System.out.println("Subkeys:");
 			for(int i=0; i<16; i++){
 				System.out.print("K[");
@@ -100,9 +292,10 @@ public class DES {
 					System.out.print(subKeys[i][k]);
 				}
 				System.out.println();
-			}		
+			}*/		
 			
-			subKeyBits = keysToBits(subKeys);			
+			subKeyBits = keysToBits(subKeys);	
+			/*		
 			System.out.println();
 			for(int i=0; i<16; i++){
 				System.out.print("K[");
@@ -110,7 +303,7 @@ public class DES {
 				else System.out.print(i+1);
 				System.out.print("]: ");
 				System.out.println(getBitSetString(subKeyBits[i]) + "\tLength: " + subKeyBits[i].length());
-			}
+			}*/
 			
 
 			File file = new File(inputFile.toString());
@@ -139,16 +332,15 @@ public class DES {
 
 			//random iv has been generated
 			String ivString = new String (iv, "UTF-8");
-			writer.write(ivString);
+			writer.write(iv);
 			BitSet ivBits = bytesToBitSet(iv);
-			ivBits.set(8);
+			//ivBits.set(8);
 
 			StringBuilder temp = new StringBuilder();
     		for (byte b : iv) {
         		temp.append(String.format("%02x", b));
     		}//end for
     		System.out.println("IV: " + temp);
-    		ivBits.set(8, false);
 
 
 
@@ -156,12 +348,15 @@ public class DES {
 				//if toEncrypt is full, encrypt them, print encrypted bytes,
 				// store nextByte in toEncrypt[0], and leave with the count at 1
 				if (count == 8){
-
 					//xor with previous block
 					BitSet bitsToEncrypt = bytesToBitSet(toEncrypt);
+					bitsToEncrypt.set(64);
+					System.out.println("First block: " + getBitSetString(bitsToEncrypt));
+
 					if (useIV){
 						useIV = false;
 						bitsToEncrypt.xor(ivBits);
+						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
 					}
 					else{
 						bitsToEncrypt.xor(encryptedBits);
@@ -176,7 +371,7 @@ public class DES {
 					//get encryped string
 					encryptedText = new String (encryptedBytes, "UTF-8");
 					//write encryped string to the output file
-					writer.write(encryptedText);
+					writer.write(encryptedBytes);
 
 					//print the hex representation of he encrypted bits
 					StringBuilder sb = new StringBuilder();
@@ -203,14 +398,33 @@ public class DES {
 			//DO STUFF WITH THE EXTRA LEFT OVER IN TO ENCRYPT BEFORE CLOSING WRITER
 			if (!toEncryptIsEmpty){
 
+				//xor with previous block
+					BitSet bitsToEncrypt = bytesToBitSet(toEncrypt);
+					bitsToEncrypt.set(64);
+					System.out.println("First block: " + getBitSetString(bitsToEncrypt));
+					System.out.println(" Size:  " + bitsToEncrypt.length());
+
+					if (useIV){
+						useIV = false;
+						bitsToEncrypt.xor(ivBits);
+						//bitsToEncrypt.set(64);
+						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
+						System.out.println(" Size:  " + bitsToEncrypt.length());
+					}
+					else{
+						bitsToEncrypt.xor(encryptedBits);
+					}
+
 				//get encrypted bitset
-				encryptedBits = encrypt64Bits(bytesToBitSet(toEncrypt), subKeyBits);
+				encryptedBits = encrypt64Bits(bitsToEncrypt, subKeyBits);
 				//get encrypted bytes
 				encryptedBytes = encryptedBits.toByteArray();
 				//get encryped string
 				encryptedText = new String (encryptedBytes, "UTF-8");
 				//write encryped string to the output file
-				writer.write(encryptedText);
+				System.out.println("about to write" + getBitSetString(encryptedBits));
+
+				writer.write(encryptedBytes);
 
 				//print the hex representation of he encrypted bits
 				StringBuilder sb = new StringBuilder();
@@ -405,13 +619,14 @@ public class DES {
 				if (bits.charAt(3) == '1'){
 					afterSboxReduction.set(firstBitToSet+3);
 				}
-			}
+			}	
+			/*
 
 			if (i < 7){
 				afterSboxReduction.set(firstBitToSet+4);
 				//System.out.println("Binary Representation: " + getBitSetString(afterSboxReduction.get(firstBitToSet, firstBitToSet+5)));
 				afterSboxReduction.set(firstBitToSet+4, false);
-			}
+			}*/
 
 			firstBit = firstBit+6;
 			firstBitToSet = firstBitToSet+4;
