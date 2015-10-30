@@ -132,7 +132,7 @@ public class DES {
 					//get encrypted bitset
 					encryptedBits = encrypt64Bits(bytesToBitSet(toEncrypt), subKeyBits);
 					//get encrypted bytes
-					System.out.println(encryptedBits.length());
+					//System.out.println(encryptedBits.length());
 					encryptedBytes = encryptedBits.toByteArray();
 					//get encryped string
 					encryptedText = new String (encryptedBytes, "UTF-8");
@@ -167,14 +167,7 @@ public class DES {
 				//get encrypted bitset
 				encryptedBits = encrypt64Bits(bytesToBitSet(toEncrypt), subKeyBits);
 				//get encrypted bytes
-				encryptedBits.clear(amountOfBytesInToEncrypt*8, 64);
-				byte [] someEncryptedBytes = encryptedBits.toByteArray();
-				for (int i = 0; i < amountOfBytesInToEncrypt; i++){
-					encryptedBytes[i] = someEncryptedBytes[i];
-				}
-				for (int i = amountOfBytesInToEncrypt; i < 8; i ++){
-					encryptedBytes[i] = 0;
-				}
+				encryptedBytes = encryptedBits.toByteArray();
 				//get encryped string
 				encryptedText = new String (encryptedBytes, "UTF-8");
 				//write encryped string to the output file
@@ -224,8 +217,8 @@ public class DES {
 
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
 	private static BitSet encrypt64Bits(BitSet input, BitSet[] subkeys){
-			System.out.println("Initial bits to encrypt: " + getBitSetString(input));
-		System.out.println("Initial size: " + input.length());
+		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
+		//System.out.println("Initial size: " + input.length());
 
 
 		//permutate all inpute through table IP
@@ -247,21 +240,23 @@ public class DES {
 		}
 		right.set(32);
 		left.set(32);
-		System.out.println("Left:  " + getBitSetString(left));
-		System.out.println("Right: " + getBitSetString(right));
+		//System.out.println("Left:  " + getBitSetString(left));
+		//System.out.println("Right: " + getBitSetString(right));
 		
 
 		//16 iterations using function f that operates on two blocks
 		for (int i = 0; i < 16; i++){
+			//System.out.println("Round " + (i+1) + " ----------------");
 			BitSet rightTemp = right;
 			//f input: data of 32 bits and a key of 48 bits
 			//f output: block of 32 bits
-			//right = roundFunction(right, subkeys[i]);
+			right = roundFunction(right, subkeys[i]);
 
 			//new r = xor(L, f(R, subkey[i]))
-			//right = right.xor(left);
-			//left = rightTemp;
+			right.xor(left);
+			right.set(32);
 			//new L = R before xor
+			left = rightTemp;
 		}
 
 		//reverse halves after rounds
@@ -279,7 +274,7 @@ public class DES {
 			}
 		}
 		bitsAfterRounds.set(64);
-		System.out.println("Bits after 16 rounds: " + getBitSetString(bitsAfterRounds));
+		//System.out.println("Bits after 16 rounds: " + getBitSetString(bitsAfterRounds));
 
 
 
@@ -293,21 +288,110 @@ public class DES {
 	}
 
 	private static BitSet roundFunction(BitSet input, BitSet key){
-		return input;
-	}
 
-	/*
-	public static int[] IP = {
-		58, 50, 42, 34, 26, 18, 10, 2
-		, 60, 52, 44, 36, 28, 20, 12, 4
-		, 62, 54, 46, 38, 30, 22, 14, 6
-		, 64, 56, 48, 40, 32, 24, 16, 8
-		, 57, 49, 41, 33, 25, 17, 9, 1
-		, 59, 51, 43, 35, 27, 19, 11, 3
-		, 61, 53, 45, 37, 29, 21, 13, 5
-		, 63, 55, 47, 39, 31, 23, 15, 7
-	};
-	*/
+		//expand input from 32 to 48 bits with selection table E
+		//System.out.println("Bits before expansion: " + getBitSetString(input));
+		BitSet afterExpansion = permute(input, E);
+		//System.out.println("Bits after expansion: " + getBitSetString(afterExpansion));
+
+		//xor the output with the key
+		afterExpansion.xor(key);
+		afterExpansion.set(48);
+		///System.out.println("Bits after xor with the key: " + getBitSetString(afterExpansion));
+
+		BitSet afterSboxReduction = new BitSet(37);
+		afterSboxReduction.clear();
+
+		//do sbox reduction from 48 bits to 36
+		int firstBit = 0;
+		int firstBitToSet = 0;
+
+		for (int i = 0; i < 8; i++){
+
+			//find sbox row using six bits starting with firstBit
+			int row = 0;
+			//if the first bit is one, add 2 to row
+			if (afterExpansion.get(firstBit))
+				row += 2;
+			//if the last bit is one, add 1 to row
+			if (afterExpansion.get(firstBit+5))
+				row += 2;
+
+			//sfind sbox col using six bits starting with firstBit
+			int col = 0;
+			if (afterExpansion.get(firstBit+1))
+				col += 8;
+			if (afterExpansion.get(firstBit+2))
+				col +=4;
+			if (afterExpansion.get(firstBit+3))
+				col+=2;
+			if (afterExpansion.get(firstBit+4))
+				col+=1;
+
+			int sBoxVal = S[row][col];
+
+
+			//System.out.println("number to represent in binary: " + sBoxVal);
+			String bits = Integer.toBinaryString(sBoxVal);
+			//System.out.println(bits);
+
+			//set the proper bits
+			if(bits.length() == 1){
+				if (bits.charAt(0) == '1')
+					afterSboxReduction.set(firstBitToSet+3);
+			}
+			if(bits.length() == 2){
+				if (bits.charAt(0) == '1')
+					afterSboxReduction.set(firstBitToSet+2);
+				if (bits.charAt(1) == '1')
+					afterSboxReduction.set(firstBitToSet+3);
+
+			}
+			if(bits.length() == 3){
+				if (bits.charAt(0) == '1')
+					afterSboxReduction.set(firstBitToSet+1);
+				if (bits.charAt(1) == '1')
+					afterSboxReduction.set(firstBitToSet+2);
+				if (bits.charAt(2) == '1')
+					afterSboxReduction.set(firstBitToSet+3);
+
+			}
+			if(bits.length() == 4){
+				if (bits.charAt(0) == '1')
+					afterSboxReduction.set(firstBitToSet);
+				if (bits.charAt(1) == '1')
+					afterSboxReduction.set(firstBitToSet+1);
+				if (bits.charAt(2) == '1')
+					afterSboxReduction.set(firstBitToSet+2);
+				if (bits.charAt(3) == '1'){
+					afterSboxReduction.set(firstBitToSet+3);
+				}
+			}
+
+			if (i < 7){
+				afterSboxReduction.set(firstBitToSet+4);
+				//System.out.println("Binary Representation: " + getBitSetString(afterSboxReduction.get(firstBitToSet, firstBitToSet+5)));
+				afterSboxReduction.set(firstBitToSet+4, false);
+			}
+
+			firstBit = firstBit+6;
+			firstBitToSet = firstBitToSet+4;
+
+		}
+
+		afterSboxReduction.set(32);
+		//System.out.println("After SBox replacements: " + getBitSetString(afterSboxReduction));
+
+		//do final permutation P
+		BitSet toReturn = permute(afterSboxReduction, P);
+		toReturn.set(32);
+		//System.out.println("After final permute: " + getBitSetString(toReturn));
+
+
+
+		//return encrypted block
+		return afterExpansion;
+	}
 
 	private static BitSet permute(BitSet in, int [] permuteTable){
 
@@ -316,9 +400,9 @@ public class DES {
 
 		for (int i = 0; i < permuteTable.length; i++){
 			//get the value of the first bit
-			boolean bitValue = in.get(i);
+			boolean bitValue = in.get(permuteTable[i]);
 			//set the permuteTable[i] bit of output to that value.
-			output.set(permuteTable[i], bitValue);
+			output.set(i, bitValue);
 		}
 		output.set(permuteTable.length);
 		return output;
