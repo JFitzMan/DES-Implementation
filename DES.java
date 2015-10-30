@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.BitSet;
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.security.NoSuchAlgorithmException;
 
 import java.util.ArrayList;
 
@@ -123,17 +124,55 @@ public class DES {
 			int count = 0;
 			String encryptedText;
 			int amountOfBytesInToEncrypt = 0;
+			boolean useIV = true;
+
+			//get IV set up first
+			byte[] iv = new byte[8]; 
+    		//fill it with random bytes
+			try{
+				SecureRandom randomGen = SecureRandom.getInstance("SHA1PRNG");
+				randomGen.nextBytes(iv);
+			}
+			catch( NoSuchAlgorithmException e) {
+				System.out.println("No such algorithm!");
+			}
+
+			//random iv has been generated
+			String ivString = new String (iv, "UTF-8");
+			writer.write(ivString);
+			BitSet ivBits = bytesToBitSet(iv);
+			ivBits.set(8);
+
+			StringBuilder temp = new StringBuilder();
+    		for (byte b : iv) {
+        		temp.append(String.format("%02x", b));
+    		}//end for
+    		System.out.println("IV: " + temp);
+    		ivBits.set(8, false);
+
+
 
 			while ( (nextByte = (byte) byteStream.read()) != -1){
 				//if toEncrypt is full, encrypt them, print encrypted bytes,
 				// store nextByte in toEncrypt[0], and leave with the count at 1
 				if (count == 8){
 
+					//xor with previous block
+					BitSet bitsToEncrypt = bytesToBitSet(toEncrypt);
+					if (useIV){
+						useIV = false;
+						bitsToEncrypt.xor(ivBits);
+					}
+					else{
+						bitsToEncrypt.xor(encryptedBits);
+					}
 					//get encrypted bitset
-					encryptedBits = encrypt64Bits(bytesToBitSet(toEncrypt), subKeyBits);
+					encryptedBits = encrypt64Bits(bitsToEncrypt, subKeyBits);
 					//get encrypted bytes
 					//System.out.println(encryptedBits.length());
+					encryptedBits.set(64, false);
 					encryptedBytes = encryptedBits.toByteArray();
+					//System.out.println(encryptedBytes.length + encryptedBytes.toString());
 					//get encryped string
 					encryptedText = new String (encryptedBytes, "UTF-8");
 					//write encryped string to the output file
@@ -141,8 +180,8 @@ public class DES {
 
 					//print the hex representation of he encrypted bits
 					StringBuilder sb = new StringBuilder();
-    				for (byte b : toEncrypt) {
-        				sb.append(String.format("%02x", b));
+    				for (int i = 0; i < 8; i++) {
+        				sb.append(String.format("%02x", encryptedBytes[i]));
     				}//end for
     				System.out.println(sb);
 
