@@ -125,7 +125,7 @@ public class DES {
 					
 					if (isIV){
 						previousBlock = bytesToBitSet(toDecrypt);
-						//previousBlock.set(64);
+						previousBlock.set(64);
 						isIV = false;
 						System.out.println("Got IV: ");
 						StringBuilder temp = new StringBuilder();
@@ -154,6 +154,9 @@ public class DES {
 						decryptedText = new String (decryptedBytes, "UTF-8");
 						//write encryped string to the output file
 						writer.write(decryptedBytes);
+						System.out.println("decryptedBits: " + getBitSetString(decryptedBits));
+						previousBlock = decryptedBits;
+						System.out.println("previousBlock: " + getBitSetString(previousBlock));
 
 						//print the hex representation of he encrypted bits
 						StringBuilder sb = new StringBuilder();
@@ -506,13 +509,15 @@ public class DES {
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
 	private static BitSet encrypt64Bits(BitSet input, BitSet[] subkeys){
 		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
-		System.out.println("Initial size: " + input.length());
+		//System.out.println("Initial size: " + input.length());
 
 
 		//permutate all inpute through table IP
 		BitSet permutedBits = permute (input, IP);
 		System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
-		if (permutedBits.get(1) != input.get(58)){
+
+		//58th bit of input should euqal the 1st bit ouf output
+		if ( (permutedBits.get(0) && input.get(57)) && (!permutedBits.get(0) && !input.get(57))  ){
 			System.out.println("problem");
 		}
 
@@ -537,30 +542,30 @@ public class DES {
 
 		//16 iterations using function f that operates on two blocks
 		for (int i = 0; i < 16; i++){
-			System.out.println("Round " + (i+1) + " ----------------------------------------------");
+			//System.out.println("Round " + (i+1) + " ----------------------------------------------");
 			BitSet rightTemp = right;
-			System.out.println("right temp:                 " + getBitSetString(rightTemp));
+			//System.out.println("right temp:                 " + getBitSetString(rightTemp));
 			//f input: data of 32 bits and a key of 48 bits
 			//f output: block of 32 bits
 			BitSet newRight = roundFunction(right, subkeys[i]);
 			//System.out.println("new right: " + getBitSetString(newRight));
 			right = newRight;
-			System.out.println("right after rounds:         " + getBitSetString(right));
+			//System.out.println("right after rounds:         " + getBitSetString(right));
 			//System.out.println("new right: " + getBitSetString(right));
 
 			//new r = xor(L, f(R, subkey[i]))
-			System.out.println("Left before xor with right: " + getBitSetString(left));
+			//System.out.println("Left before xor with right: " + getBitSetString(left));
 			right.xor(left);
 			right.set(32);
-			System.out.println("right after xor             " + getBitSetString(right));
+			//System.out.println("right after xor             " + getBitSetString(right));
 
 			//new L = R before xor
 			left = rightTemp;
-			System.out.println("new left:                   " + getBitSetString(left));
+			//System.out.println("new left:                   " + getBitSetString(left));
 		}
-		System.out.println("After Rounds");
-		System.out.println("Left:  " + getBitSetString(left));
-		System.out.println("Right: " + getBitSetString(right));
+		//System.out.println("After Rounds");
+		//System.out.println("Left:  " + getBitSetString(left));
+		//System.out.println("Right: " + getBitSetString(right));
 
 		//reverse halves after rounds
 		BitSet bitsAfterRounds = new BitSet(64);//+1 to account for zeros not printing
@@ -577,13 +582,13 @@ public class DES {
 			}
 		}
 		bitsAfterRounds.set(64);
-		System.out.println("Bits after 16 rounds: " + getBitSetString(bitsAfterRounds));
+		//System.out.println("Bits after 16 rounds: " + getBitSetString(bitsAfterRounds));
 
 
 
 		//apply FP table to output
 		BitSet bitsToReturn = permute(bitsAfterRounds, FP);
-		System.out.println("Bits after FP: " + getBitSetString(bitsToReturn));
+		//System.out.println("Bits after FP: " + getBitSetString(bitsToReturn));
 
 		//return encrypted bits
 
@@ -593,14 +598,14 @@ public class DES {
 	private static BitSet roundFunction(BitSet input, BitSet key){
 
 		//expand input from 32 to 48 bits with selection table E
-		System.out.println("    Bits before expansion:       " + getBitSetString(input));
+		//System.out.println("    Bits before expansion:       " + getBitSetString(input));
 		BitSet afterExpansion = permute(input, E);
-		System.out.println("    Bits after expansion:        " + getBitSetString(afterExpansion));
+		//System.out.println("    Bits after expansion:        " + getBitSetString(afterExpansion));
 
 		//xor the output with the key
 		//afterExpansion.xor(key);
 		afterExpansion.set(48);
-		System.out.println("    Bits after xor with the key: " + getBitSetString(afterExpansion));
+		//System.out.println("    Bits after xor with the key: " + getBitSetString(afterExpansion));
 
 		BitSet afterSboxReduction = new BitSet(32);
 		afterSboxReduction.clear();
@@ -684,12 +689,12 @@ public class DES {
 		}
 
 		afterSboxReduction.set(32);
-		System.out.println("    After SBox replacements:     " + getBitSetString(afterSboxReduction));
+		//System.out.println("    After SBox replacements:     " + getBitSetString(afterSboxReduction));
 
 		//do final permutation P
 		BitSet toReturn = permute(afterSboxReduction, P);
 		toReturn.set(32);
-		System.out.println("    After final P :              " + getBitSetString(toReturn));
+		//System.out.println("    After final P :              " + getBitSetString(toReturn));
 		//System.out.println("After final permute: " + getBitSetString(toReturn));
 
 
