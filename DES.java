@@ -27,13 +27,13 @@ public class DES {
 		StringBuilder keyStr = new StringBuilder();
 		StringBuilder encrypt = new StringBuilder();
 		
-		pcl(args, inputFile, outputFile, keyFileName, encrypt);
+		pcl(args, inputFile, outputFile, keyStr, encrypt);
 		
 		if(keyStr.toString() != "" && encrypt.toString().equals("e")){
-			readKey(keyFileName.toString(), keyStr );
+			//readKey(keyFileName.toString(), keyStr );
 			encrypt(keyStr, inputFile, outputFile);
 		} else if(keyStr.toString() != "" && encrypt.toString().equals("d")){
-			readKey(keyFileName.toString(), keyStr );
+			//readKey(keyFileName.toString(), keyStr );
 			decrypt(keyStr, inputFile, outputFile);
 		}
 		
@@ -69,7 +69,7 @@ public class DES {
 			while (keyBin.length() < 64){ //Add leading zeroes back in
 				keyBin = "0"+keyBin;
 			}
-			System.out.println("key in binary: \n" + keyBin);
+			//System.out.println("key in binary: \n" + keyBin);
 			
 			byte[][] subKeys = new byte[16][48]; 
 			BitSet[] subKeyBits = new BitSet[16];
@@ -128,18 +128,18 @@ public class DES {
 						previousBlock = bytesToBitSet(toDecrypt);
 						previousBlock.set(64);
 						isIV = false;
-						System.out.println("Got IV: ");
+						//System.out.println("Got IV: ");
 						StringBuilder temp = new StringBuilder();
     					for (byte b : toDecrypt) {
         					temp.append(String.format("%02x", b));
     					}//end for
-    					System.out.println("IV:           " + temp);
-    					System.out.println("IV from bits: " + getBitSetString(previousBlock));
+    					//System.out.println("IV:           " + temp);
+    					//System.out.println("IV from bits: " + getBitSetString(previousBlock));
 					}
 					else{
 						BitSet bitsToDecrypt = bytesToBitSet(toDecrypt);
 
-						System.out.println("nextBitsToDecrypt: " + getBitSetString(bitsToDecrypt));
+						//System.out.println("nextBitsToDecrypt: " + getBitSetString(bitsToDecrypt));
 						//bitsToDecrypt.set(64);
 						//get encrypted bitset
 						nextBlock = bitsToDecrypt;
@@ -159,17 +159,17 @@ public class DES {
 						//decryptedBits.set(64, false);
 
 						writer.write(decryptedBytes);
-						System.out.println("decryptedBits: " + getBitSetString(decryptedBits));
+						//System.out.println("decryptedBits: " + getBitSetString(decryptedBits));
 
 						//previousBlock = decryptedBits;
 						//System.out.println("previousBlock: " + getBitSetString(previousBlock));
-
+						/*
 						//print the hex representation of he encrypted bits
 						StringBuilder sb = new StringBuilder();
     					for (int i = 0; i < 8; i++) {
         					sb.append(String.format("%02x", decryptedBytes[i]));
     					}//end for
-    					System.out.println(sb);
+    					System.out.println(sb);*/
     			    }
 
 					count = 0;
@@ -192,13 +192,13 @@ public class DES {
 	}
 
 	private static BitSet decrypt64Bits(BitSet input, BitSet[] subkeys){
-		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
-		System.out.println("Initial size: " + input.length());
+		//System.out.println("Initial bits to encrypt: " + getBitSetString(input));
+		//System.out.println("Initial size: " + input.length());
 
 
 		//permutate all inpute through table IP
 		BitSet permutedBits = permute (input, IP);
-		System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
+		//System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
 
 		//get left and right halves
 		//BitSet left = permutedBits.get(0, permutedBits.length()/2);
@@ -215,36 +215,36 @@ public class DES {
 		}
 		right.set(32);
 		left.set(32);
-		System.out.println("Left:  " + getBitSetString(left));
-		System.out.println("Right: " + getBitSetString(right));
+		//System.out.println("Left:  " + getBitSetString(left));
+		//System.out.println("Right: " + getBitSetString(right));
 		
 
 		//16 iterations using function f that operates on two blocks
 		for (int i = 0; i < 16; i++){
-			System.out.println("Round " + (i+1) + " ----------------");
+			//System.out.println("Round " + (i+1) + " ----------------");
 			BitSet rightTemp = right;
-			System.out.println("right temp: " + getBitSetString(rightTemp));
+			//System.out.println("right temp: " + getBitSetString(rightTemp));
 			//f input: data of 32 bits and a key of 48 bits
 			//f output: block of 32 bits
 			BitSet newRight = roundFunction(right, subkeys[i]);
 			//System.out.println("new right: " + getBitSetString(newRight));
 			right = newRight;
-			System.out.println("right after rounds " + getBitSetString(right));
+			//System.out.println("right after rounds " + getBitSetString(right));
 			//System.out.println("new right: " + getBitSetString(right));
 
 			//new r = xor(L, f(R, subkey[i]))
-			System.out.println("eft before xor with right " + getBitSetString(left));
+			//System.out.println("eft before xor with right " + getBitSetString(left));
 			right.xor(left);
 			right.set(32);
-			System.out.println("right after xor " + getBitSetString(right));
+			//System.out.println("right after xor " + getBitSetString(right));
 
 			//new L = R before xor
 			left = rightTemp;
-			System.out.println("new left: " + getBitSetString(left));
+			//System.out.println("new left: " + getBitSetString(left));
 		}
-		System.out.println("After Rounds");
-		System.out.println("Left:  " + getBitSetString(left));
-		System.out.println("Right: " + getBitSetString(right));
+		//System.out.println("After Rounds");
+		//System.out.println("Left:  " + getBitSetString(left));
+		//System.out.println("Right: " + getBitSetString(right));
 
 		//reverse halves after rounds
 		BitSet bitsAfterRounds = new BitSet(64);//+1 to account for zeros not printing
@@ -267,7 +267,7 @@ public class DES {
 
 		//apply FP table to output
 		BitSet bitsToReturn = permute(bitsAfterRounds, FP);
-		System.out.println("Bits after FP: " + getBitSetString(bitsToReturn));
+		//System.out.println("Bits after FP: " + getBitSetString(bitsToReturn));
 
 		//return encrypted bits
 
@@ -287,7 +287,7 @@ public class DES {
 			while (keyBin.length() < 64){ //Add leading zeroes back in
 				keyBin = "0"+keyBin;
 			}
-			System.out.println("key in binary: \n" + keyBin);
+			//System.out.println("key in binary: \n" + keyBin);
 			
 			byte[][] subKeys = new byte[16][48]; 
 			BitSet[] subKeyBits = new BitSet[16];
@@ -295,7 +295,7 @@ public class DES {
 				subKeyBits[i] = new BitSet(48);
 			
 			subKeys = makeSubKeys(keyBin); //Pass the binary key along
-			
+			/*
 			System.out.println("Subkeys:");
 			for(int i=0; i<16; i++){
 				System.out.print("K[");
@@ -306,10 +306,10 @@ public class DES {
 					System.out.print(subKeys[i][k]);
 				}
 				System.out.println();
-			}		
+			}		*/
 			
 			subKeyBits = keysToBits(subKeys);	
-					
+					/*
 			System.out.println();
 			for(int i=0; i<16; i++){
 				System.out.print("K[");
@@ -319,7 +319,7 @@ public class DES {
 				System.out.println(getBitSetString(subKeyBits[i]) + "\tLength: " + subKeyBits[i].length());
 			}
 			
-
+*/
 			File file = new File(inputFile.toString());
 			FileInputStream byteStream = new FileInputStream(file);
 
@@ -354,7 +354,7 @@ public class DES {
     		for (byte b : iv) {
         		temp.append(String.format("%02x", b));
     		}//end for
-    		System.out.println("IV: " + temp);
+    		//System.out.println("IV: " + temp);
 
 
 
@@ -369,15 +369,15 @@ public class DES {
 					
 					if (useIV){
 						useIV = false;
-						System.out.println(" IV bits: " + getBitSetString(ivBits));
+						//System.out.println(" IV bits: " + getBitSetString(ivBits));
 						bitsToEncrypt.xor(ivBits);
 						bitsToEncrypt.set(64);
-						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
+						//System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
 					}
 					else{
 						bitsToEncrypt.xor(encryptedBits);
 						bitsToEncrypt.set(64);
-						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
+						//System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
 					}
 					
 					//get encrypted bitset
@@ -420,21 +420,21 @@ public class DES {
 				//xor with previous block
 					BitSet bitsToEncrypt = bytesToBitSet(toEncrypt);
 					//bitsToEncrypt.set(64);
-					System.out.println("last block: " + getBitSetString(bitsToEncrypt));
-					System.out.println(" Size:  " + bitsToEncrypt.length());
+					//System.out.println("last block: " + getBitSetString(bitsToEncrypt));
+					//System.out.println(" Size:  " + bitsToEncrypt.length());
 
 					
 					if (useIV){
 						useIV = false;
-						System.out.println(" IV bits: " + getBitSetString(ivBits));
+						//System.out.println(" IV bits: " + getBitSetString(ivBits));
 						bitsToEncrypt.xor(ivBits);
 						bitsToEncrypt.set(64);
-						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
+						//System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
 					}
 					else{
 						bitsToEncrypt.xor(encryptedBits);
 						bitsToEncrypt.set(64);
-						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
+						//System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
 					}
 
 				//get encrypted bitset
@@ -444,7 +444,7 @@ public class DES {
 				//get encryped string
 				encryptedText = new String (encryptedBytes, "UTF-8");
 				//write encryped string to the output file
-				System.out.println("about to write" + getBitSetString(encryptedBits));
+				//System.out.println("about to write" + getBitSetString(encryptedBits));
 
 				writer.write(encryptedBytes);
 
@@ -464,7 +464,7 @@ public class DES {
 		}
 		
 	}
-	
+	/*
 	public static int[] IP = {
 		58, 50, 42, 34, 26, 18, 10, 2
 		, 60, 52, 44, 36, 28, 20, 12, 4
@@ -490,13 +490,13 @@ public class DES {
 	
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
 	private static BitSet encrypt64Bits(BitSet input, BitSet[] subkeys){
-		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
+		//System.out.println("Initial bits to encrypt: " + getBitSetString(input));
 		//System.out.println("Initial size: " + input.length());
 
 
 		//permutate all inpute through table IP
 		BitSet permutedBits = permute (input, IP);
-		System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
+		//System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
 
 		//58th bit of input should euqal the 1st bit ouf output
 		if ( (permutedBits.get(0) && input.get(57)) && (!permutedBits.get(0) && !input.get(57))  ){
@@ -518,8 +518,8 @@ public class DES {
 		}
 		right.set(32);
 		left.set(32);
-		System.out.println("Left:  " + getBitSetString(left));
-		System.out.println("Right: " + getBitSetString(right));
+		//System.out.println("Left:  " + getBitSetString(left));
+		//System.out.println("Right: " + getBitSetString(right));
 		
 
 		//16 iterations using function f that operates on two blocks
@@ -884,9 +884,9 @@ public class DES {
     		System.out.println(sb);
 
     		//also write key to file key.k
-    		FileOutputStream outputStream = new FileOutputStream("key.k");
-    		outputStream.write(bytes);
-    		outputStream.close();
+    		//FileOutputStream outputStream = new FileOutputStream("key.k");
+    		//outputStream.write(bytes);
+    		//outputStream.close();
 
 
 			return;
@@ -903,7 +903,7 @@ public class DES {
 	 * -h for the host name of system
 	 */
 	private static void pcl(String[] args, StringBuilder inputFile,
-							StringBuilder outputFile, StringBuilder keyFileName,
+							StringBuilder outputFile, StringBuilder keyStr,
 							StringBuilder encrypt) {
 		/*
 		 * http://www.urbanophile.com/arenn/hacking/getopt/gnu.getopt.Getopt.html
@@ -923,12 +923,12 @@ public class DES {
 		        	  break;
 	     	  	  case 'e':
 		        	  arg = g.getOptarg();
-		        	  keyFileName.append(arg);
+		        	  keyStr.append(arg);
 		        	  encrypt.append("e");
 		        	  break;
 	     	  	  case 'd':
 		        	  arg = g.getOptarg();
-		        	  keyFileName.append(arg);
+		        	  keyStr.append(arg);
 		        	  encrypt.append("d");
 		        	  break;
 		          case 'k':
