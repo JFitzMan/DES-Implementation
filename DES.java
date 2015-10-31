@@ -122,7 +122,7 @@ public class DES {
 				//if toEncrypt is full, encrypt them, print encrypted bytes,
 				// store nextByte in toEncrypt[0], and leave with the count at 1
 				if (count == 8){
-					/*
+					
 					if (isIV){
 						previousBlock = bytesToBitSet(toDecrypt);
 						//previousBlock.set(64);
@@ -132,9 +132,10 @@ public class DES {
     					for (byte b : toDecrypt) {
         					temp.append(String.format("%02x", b));
     					}//end for
-    					System.out.println("IV: " + temp);
+    					System.out.println("IV:           " + temp);
+    					System.out.println("IV from bits: " + getBitSetString(previousBlock));
 					}
-					else{*/
+					else{
 						//xor with previous block
 						BitSet bitsToDecrypt = bytesToBitSet(toDecrypt);
 
@@ -145,7 +146,8 @@ public class DES {
 						//get encrypted bytes
 						//System.out.println(encryptedBits.length());
 						//decryptedBits.set(64, false);
-						//decryptedBits.xor(previousBlock);
+						decryptedBits.xor(previousBlock);
+						decryptedBits.set(64);
 						decryptedBytes = decryptedBits.toByteArray();
 						//System.out.println(encryptedBytes.length + encryptedBytes.toString());
 						//get encryped string
@@ -159,7 +161,7 @@ public class DES {
         					sb.append(String.format("%02x", decryptedBytes[i]));
     					}//end for
     					System.out.println(sb);
-    			    //}
+    			    }
 
 					count = 0;
 					//System.out.println("After Block");
@@ -345,9 +347,9 @@ public class DES {
 
 			//random iv has been generated
 			String ivString = new String (iv, "UTF-8");
-			//writer.write(iv);
+			writer.write(iv);
 			BitSet ivBits = bytesToBitSet(iv);
-			//ivBits.set(8);
+			ivBits.set(8);
 
 			StringBuilder temp = new StringBuilder();
     		for (byte b : iv) {
@@ -365,16 +367,20 @@ public class DES {
 					BitSet bitsToEncrypt = bytesToBitSet(toEncrypt);
 					//bitsToEncrypt.set(64);
 					//System.out.println("First block: " + getBitSetString(bitsToEncrypt));
-					/*
+					
 					if (useIV){
 						useIV = false;
+						System.out.println(" IV bits: " + getBitSetString(ivBits));
 						bitsToEncrypt.xor(ivBits);
+						bitsToEncrypt.set(64);
 						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
 					}
 					else{
 						bitsToEncrypt.xor(encryptedBits);
+						bitsToEncrypt.set(64);
+						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
 					}
-					*/
+					
 					//get encrypted bitset
 					encryptedBits = encrypt64Bits(bitsToEncrypt, subKeyBits);
 					//get encrypted bytes
@@ -418,17 +424,19 @@ public class DES {
 					System.out.println("last block: " + getBitSetString(bitsToEncrypt));
 					System.out.println(" Size:  " + bitsToEncrypt.length());
 
-					/*
+					
 					if (useIV){
 						useIV = false;
+						System.out.println(" IV bits: " + getBitSetString(ivBits));
 						bitsToEncrypt.xor(ivBits);
-						//bitsToEncrypt.set(64);
+						bitsToEncrypt.set(64);
 						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
-						System.out.println(" Size:  " + bitsToEncrypt.length());
 					}
 					else{
 						bitsToEncrypt.xor(encryptedBits);
-					}*/
+						bitsToEncrypt.set(64);
+						System.out.println(" after xor: " + getBitSetString(bitsToEncrypt));
+					}
 
 				//get encrypted bitset
 				encryptedBits = encrypt64Bits(bitsToEncrypt, subKeyBits);
@@ -483,6 +491,18 @@ public class DES {
 		return "";
 	}
 
+	/*
+	public static int[] IP = {
+		58, 50, 42, 34, 26, 18, 10, 2
+		, 60, 52, 44, 36, 28, 20, 12, 4
+		, 62, 54, 46, 38, 30, 22, 14, 6
+		, 64, 56, 48, 40, 32, 24, 16, 8
+		, 57, 49, 41, 33, 25, 17, 9, 1
+		, 59, 51, 43, 35, 27, 19, 11, 3
+		, 61, 53, 45, 37, 29, 21, 13, 5
+		, 63, 55, 47, 39, 31, 23, 15, 7
+	};*/
+
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
 	private static BitSet encrypt64Bits(BitSet input, BitSet[] subkeys){
 		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
@@ -492,6 +512,9 @@ public class DES {
 		//permutate all inpute through table IP
 		BitSet permutedBits = permute (input, IP);
 		System.out.println("Bits after IP:           " + getBitSetString(permutedBits));
+		if (permutedBits.get(1) != input.get(58)){
+			System.out.println("problem");
+		}
 
 		//get left and right halves
 		//BitSet left = permutedBits.get(0, permutedBits.length()/2);
@@ -682,7 +705,7 @@ public class DES {
 
 		for (int i = 0; i < permuteTable.length; i++){
 			//get the value of the first bit
-			boolean bitValue = in.get(permuteTable[i]);
+			boolean bitValue = in.get(permuteTable[i]-1);
 			//set the permuteTable[i] bit of output to that value.
 			output.set(i, bitValue);
 		}
