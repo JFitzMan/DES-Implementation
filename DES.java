@@ -114,7 +114,8 @@ public class DES {
 			int count = 0;
 			String decryptedText;
 			boolean isIV = true;
-			BitSet previousBlock = new BitSet(64);
+			BitSet nextBlock;
+			BitSet previousBlock= new BitSet(64);
 
 
 
@@ -136,27 +137,32 @@ public class DES {
     					System.out.println("IV from bits: " + getBitSetString(previousBlock));
 					}
 					else{
-						//xor with previous block
 						BitSet bitsToDecrypt = bytesToBitSet(toDecrypt);
 
 						System.out.println("nextBitsToDecrypt: " + getBitSetString(bitsToDecrypt));
 						//bitsToDecrypt.set(64);
 						//get encrypted bitset
+						nextBlock = bitsToDecrypt;
 						decryptedBits = decrypt64Bits(bitsToDecrypt, subKeyBits);
 						//get encrypted bytes
 						//System.out.println(encryptedBits.length());
 						//decryptedBits.set(64, false);
+
 						decryptedBits.xor(previousBlock);
-						decryptedBits.set(64);
+						//decryptedBits.set(64);
+						previousBlock = nextBlock;
 						decryptedBytes = decryptedBits.toByteArray();
 						//System.out.println(encryptedBytes.length + encryptedBytes.toString());
 						//get encryped string
 						decryptedText = new String (decryptedBytes, "UTF-8");
 						//write encryped string to the output file
+						//decryptedBits.set(64, false);
+
 						writer.write(decryptedBytes);
 						System.out.println("decryptedBits: " + getBitSetString(decryptedBits));
-						previousBlock = decryptedBits;
-						System.out.println("previousBlock: " + getBitSetString(previousBlock));
+
+						//previousBlock = decryptedBits;
+						//System.out.println("previousBlock: " + getBitSetString(previousBlock));
 
 						//print the hex representation of he encrypted bits
 						StringBuilder sb = new StringBuilder();
