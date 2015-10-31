@@ -268,16 +268,6 @@ public class DES {
 		return bitsToReturn;
 	}
 
-	/**
-	 * TODO: You need to write the DES encryption here.
-	 * @param line
-	 */
-	private static String DES_decrypt(String iVStr, String line) {
-		
-		return null;
-	}
-
-
 	private static void encrypt(StringBuilder keyStr, StringBuilder inputFile,
 			StringBuilder outputFile) {
 		
@@ -466,35 +456,9 @@ public class DES {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-
 		
 	}
 	
-	/**
-	 * TODO: You need to write the DES encryption here.
-	 * This is going to collect bytes until it forms a new line
-	 *
-	 * At that point, its going to call encrypt64bits, get the enrypted bits, and return them.
-	 *
-	 * When the input arg line == null, it will need to prepare a buffer before sending whats
-	 * left to the encrypt64bits function
-	 * @param line
-	 */
-	private static String DES_encrypt(String line) {
-		//check to see if this is the last line
-		if (line == null){
-			//pad toEncrpt with 00s and encrypt it
-		}
-		//process line into toEncrypt String
-		else{
-			byte [] newLine = line.getBytes(); 
-
-		}
-		return "";
-	}
-
-	/*
 	public static int[] IP = {
 		58, 50, 42, 34, 26, 18, 10, 2
 		, 60, 52, 44, 36, 28, 20, 12, 4
@@ -506,6 +470,18 @@ public class DES {
 		, 63, 55, 47, 39, 31, 23, 15, 7
 	};*/
 
+	
+	/*
+	 * TODO: You need to write the DES encryption here.
+	 * This is going to collect bytes until it forms a new line
+	 *
+	 * At that point, its going to call encrypt64bits, get the enrypted bits, and return them.
+	 *
+	 * When the input arg line == null, it will need to prepare a buffer before sending whats
+	 * left to the encrypt64bits function
+	 * @param line
+	*/
+	
 	//before coming here, the bits MUST be padded. 64 bits are expected as input
 	private static BitSet encrypt64Bits(BitSet input, BitSet[] subkeys){
 		System.out.println("Initial bits to encrypt: " + getBitSetString(input));
