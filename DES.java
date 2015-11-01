@@ -143,6 +143,7 @@ public class DES {
 						//bitsToDecrypt.set(64);
 						//get encrypted bitset
 						nextBlock = bitsToDecrypt;
+						decryptedBits.clear();
 						decryptedBits = decrypt64Bits(bitsToDecrypt, subKeyBits);
 						//get encrypted bytes
 						//System.out.println(encryptedBits.length());
@@ -386,6 +387,18 @@ public class DES {
 					//System.out.println(encryptedBits.length());
 					encryptedBits.set(64, false);
 					encryptedBytes = encryptedBits.toByteArray();
+
+					if (encryptedBytes.length != 8){
+						byte [] newEncryptedBytes = new byte[8];
+						for (int i = 0; i < encryptedBytes.length; i++) {
+							newEncryptedBytes[i] = encryptedBytes[i];
+						}
+						for (int i = encryptedBytes.length; i < 8; i++) {
+							newEncryptedBytes[i] = 0;
+						}
+						encryptedBytes = newEncryptedBytes;
+					}
+
 					//System.out.println(encryptedBytes.length + encryptedBytes.toString());
 					//get encryped string
 					encryptedText = new String (encryptedBytes, "UTF-8");
@@ -439,6 +452,7 @@ public class DES {
 
 				//get encrypted bitset
 				encryptedBits = encrypt64Bits(bitsToEncrypt, subKeyBits);
+				//encryptedBits.set(64, false);
 				//get encrypted bytes
 				encryptedBytes = encryptedBits.toByteArray();
 				//get encryped string
