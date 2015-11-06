@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.BitSet;
 import java.math.BigInteger;
-import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -18,35 +17,83 @@ public class RSA {
 	public static void main(String[] args){
 		
 		StringBuilder bitSizeStr = new StringBuilder();
-		StringBuilder keyStr = new StringBuilder();
+		//StringBuilder nStr = new StringBuilder();
+		StringBuilder dStr = new StringBuilder();
+		StringBuilder eStr = new StringBuilder();
 		StringBuilder m = new StringBuilder();
 		
-		pcl(args, bitSizeStr, keyStr, m);
+		pcl(args, bitSizeStr, dStr, eStr,m);
 		
 		if(!bitSizeStr.toString().equalsIgnoreCase("")){
 			//This means you want to create a new key
 			genRSAkey(bitSizeStr);
 		}
 		
-		if(!keyStr.toString().equalsIgnoreCase("")){
-			RSAencrypt(m, keyStr);
+		if(!eStr.toString().equalsIgnoreCase("")){
+			RSAencrypt(m, eStr);
 		}
 		
-		if(!keyStr.toString().equalsIgnoreCase("")){
-			RSAdecrypt(m, keyStr);
+		if(!dStr.toString().equalsIgnoreCase("")){
+			RSAdecrypt(m, dStr);
 		}
 		
 		
 	}
 
 	private static void RSAencrypt(StringBuilder m, StringBuilder keyStr) {
-		BigInteger e, n;
-		System.out.println("m = " + m.toString() + "\nkeyStr = " + keyStr.toString());
+		BigInteger e, n, M, C; 			//M = Message, C = Ciphertext
+		//System.out.println("m = " + m.toString() + "\nkeyStr = " + keyStr.toString());
 		String[] keys = getKeys(keyStr);
+		String cipher = null;
+		
+		e = new BigInteger(keys[0]); 	//Get e, should be first entry in the file
+		n = new BigInteger(keys[1]);	//Get n, should be second entry
+		M = new BigInteger(m.toString(), 16);
+		C = M.modPow(e, n);				//From slide, C = M^e mod n			
+		//System.out.println("e = " + e.toString() + "\nn = " + n.toString() + "\nMessage = " + M.toString() + "\nC = " + C.toString());
+		
+		cipher = C.toString(16);		//Convert from BigInteger to string in hex
+		System.out.println("\nCipher = " + cipher);
+		
+		try (Writer cWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Cipher.txt"), "utf-8"))) {
+				cWriter.write(cipher);
+			} catch (Exception ex) {
+				System.out.println("File could not be written to.");
+			}
+		System.out.println("\nCipher has been written to Cipher.txt");
 	}
 
 	private static void RSAdecrypt(StringBuilder c, StringBuilder keyStr){
-		// TODO Auto-generated method stub
+		BigInteger d, n, C, M;
+		//System.out.println("c = " + c.toString() + "\nkeyStr = " + keyStr.toString());
+		String[] keys = getKeys(keyStr);
+		String cipher = null;
+		String message = null;
+		
+		try{ 			//Get the ciphertext from the file it was written to
+			BufferedReader buf = new BufferedReader(new FileReader(c.toString()));
+			StringBuffer stringBuf = new StringBuffer();
+			cipher = buf.readLine();
+		} catch (Exception ex) {
+			System.err.println("File " + keyStr.toString() + " could not be opened!");
+		}
+		
+		d = new BigInteger(keys[0]);		//Pretty much the same as encrypt
+		n = new BigInteger(keys[1]);
+		C = new BigInteger(cipher, 16);
+		M = C.modPow(d, n);					//From slide, M = C^d mod n
+		//System.out.println("d = " + d.toString() + "\nn = " + n.toString() + "\nC = " + C.toString() + "\nM = " + M.toString());
+		
+		message = M.toString(16);
+		System.out.println("\nMessage = " + message);
+		
+		try (Writer mWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Message.txt"), "utf-8"))) {
+				mWriter.write(message);
+			} catch (Exception ex) {
+				System.out.println("File could not be written to.");
+			}
+		System.out.println("\nMessage has been written to Message.txt");
+		
 	}
 	
 	private static void genRSAkey(StringBuilder bitSizeStr) {
@@ -67,17 +114,17 @@ public class RSA {
 			}
 			d = e.modInverse(phi); //Thank god BigInteger has methods for literally everything, right?
 			
-			System.out.println("Public key = (" + e.toString() + " , " + n.toString() + ")");
-			System.out.println("Private key = (" + d.toString() + " , " + n.toString() + ")");
+			System.out.println("\nPublic key = (" + e.toString() + " , " + n.toString() + ")");
+			System.out.println("\nPrivate key = (" + d.toString() + " , " + n.toString() + ")");
 			
 			try (Writer pubWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("publicKey.txt"), "utf-8"))) {
 				pubWriter.write(e.toString() + " " + n.toString());
-			}
+			} 
 			try (Writer privWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("privateKey.txt"), "utf-8"))) {
 				privWriter.write(d.toString() + " " + n.toString());
 			}
 			
-			System.out.println("Keys have been written to publicKey.txt and privateKey.txt");
+			System.out.println("\nKeys have been written to publicKey.txt and privateKey.txt");
 				
 		} catch (Exception ex){
     		System.out.println("Invalid algorithm given to SecureRandom.getInstance (I think)");
@@ -92,20 +139,21 @@ public class RSA {
 			StringBuffer stringBuf = new StringBuffer();
 			String line = null;
 			while ((line = buf.readLine())!=null){
-				stringBuf.append(line).append("\n");
+				stringBuf.append(line);
 			}
 			keys = stringBuf.toString().split(" ");
 		} catch (Exception ex) {
 			System.err.println("File " + keyStr.toString() + " could not be opened!");
 		}
-		System.out.println("n = " + keys[1].toString());
 		return keys;
 	}
 	
 	/**
 	 * This function Processes the Command Line Arguments.
 	 */
-	private static void pcl(String[] args, StringBuilder bitSizeStr, StringBuilder keyStr, StringBuilder m) {
+	private static void pcl(String[] args, StringBuilder bitSizeStr,
+							StringBuilder dStr, StringBuilder eStr,
+							StringBuilder m) {
 		/*
 		 * http://www.urbanophile.com/arenn/hacking/getopt/gnu.getopt.Getopt.html
 		*/	
@@ -120,7 +168,7 @@ public class RSA {
 		        	  break;
 		          case 'e':
 		        	  arg = g.getOptarg();
-		        	  keyStr.append(arg);
+		        	  eStr.append(arg);
 		        	  break;
 		     	  /*case 'n':
 		        	  arg = g.getOptarg();
@@ -128,7 +176,7 @@ public class RSA {
 		        	  break; */
 		     	  case 'd':
 		        	  arg = g.getOptarg();
-		        	  keyStr.append(arg);
+		        	  dStr.append(arg);
 		        	  break;
 		          case 'k':
 		        	  break;
