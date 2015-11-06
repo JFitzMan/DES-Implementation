@@ -46,8 +46,8 @@ public class RSA {
 		String[] keys = getKeys(keyStr);
 		String cipher = null;
 		
-		e = new BigInteger(keys[0]); 	//Get e, should be first entry in the file
-		n = new BigInteger(keys[1]);	//Get n, should be second entry
+		e = new BigInteger(keys[0], 16); 	//Get e, should be first entry in the file
+		n = new BigInteger(keys[1], 16);	//Get n, should be second entry
 		M = new BigInteger(m.toString(), 16);
 		C = M.modPow(e, n);				//From slide, C = M^e mod n			
 		//System.out.println("e = " + e.toString() + "\nn = " + n.toString() + "\nMessage = " + M.toString() + "\nC = " + C.toString());
@@ -78,8 +78,8 @@ public class RSA {
 			System.err.println("File " + keyStr.toString() + " could not be opened!");
 		}
 		
-		d = new BigInteger(keys[0]);		//Pretty much the same as encrypt
-		n = new BigInteger(keys[1]);
+		d = new BigInteger(keys[0], 16);		//Pretty much the same as encrypt
+		n = new BigInteger(keys[1], 16);
 		C = new BigInteger(cipher, 16);
 		M = C.modPow(d, n);					//From slide, M = C^d mod n
 		//System.out.println("d = " + d.toString() + "\nn = " + n.toString() + "\nC = " + C.toString() + "\nM = " + M.toString());
@@ -103,27 +103,29 @@ public class RSA {
 				
 		try{
 			SecureRandom r = SecureRandom.getInstance("SHA1PRNG"); //Get a securely random number for seeding the prime method.
-			int bitSize = Integer.valueOf(s);			//Do stuff to turn StringBuilder into an int.
+			int bitSize = Integer.valueOf(s);				//Do stuff to turn StringBuilder into an int.
 			p = BigInteger.probablePrime(bitSize/2, r); 	//Generates numbers with the 2^-100 chance of not being prime.
 			q = BigInteger.probablePrime(bitSize/2, r);		//Close enough for me.
 			n = p.multiply(q);
 			phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
-			e = new BigInteger("17"); 					//One example from slides, I don't see why not.
-			while (phi.gcd(e).intValue() > 1) {
-				e = e.add(BigInteger.ONE);				//Just in case e is not relatively prime to phi.
+			e = new BigInteger("17"); 						//One example from slides, I don't see why not.
+			while (phi.gcd(e).intValue() > 1) {				//Just in case e is not relatively prime to phi.
+				e = e.add(BigInteger.ONE);					//Add one until it IS relatively prime.
 			}
-			d = e.modInverse(phi); //Thank god BigInteger has methods for literally everything, right?
+			d = e.modInverse(phi); 							//Thank god BigInteger has methods for literally everything, right?
 			
-			System.out.println("\nPublic key = (" + e.toString() + " , " + n.toString() + ")");
-			System.out.println("\nPrivate key = (" + d.toString() + " , " + n.toString() + ")");
+			//Specifying 16 when using toString on a BigInteger encodes it in hex. BigIntegers are magic.
+			System.out.println("\nPublic key = (" + e.toString(16) + " , " + n.toString(16) + ")");
+			System.out.println("\nPrivate key = (" + d.toString(16) + " , " + n.toString(16) + ")");
 			
 			try (Writer pubWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("publicKey.txt"), "utf-8"))) {
-				pubWriter.write(e.toString() + " " + n.toString());
+				pubWriter.write(e.toString(16) + " " + n.toString(16));
 			} 
 			try (Writer privWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("privateKey.txt"), "utf-8"))) {
-				privWriter.write(d.toString() + " " + n.toString());
+				privWriter.write(d.toString(16) + " " + n.toString(16));
 			}
 			
+			//I don't expect anyone to manually copy and paste these huge beasts of numbers for the keys. Just read it from these files.
 			System.out.println("\nKeys have been written to publicKey.txt and privateKey.txt");
 				
 		} catch (Exception ex){
@@ -133,7 +135,7 @@ public class RSA {
 	}
 
 	private static String[] getKeys(StringBuilder keyStr){
-		String[] keys = { " ", " " };
+		String[] keys = { " ", " " }; 		//Needs to be initialized to be used in the try/catch block.
 		try{
 			BufferedReader buf = new BufferedReader(new FileReader(keyStr.toString()));
 			StringBuffer stringBuf = new StringBuffer();
@@ -202,10 +204,10 @@ public class RSA {
 		useage += "-k   Usage: -k -b <bit size>\n";
 		useage += "       Generate a private/public key pair, encoded in hex, printed on the command line.\n";
 		useage += "       Key will be <bit size> big. If not specified, default is 1024. \n\n";
-		useage += "-e   Usage: -e <public key> -i <plaintext value>\n";
-		useage += "       Encrypt the integer <plaintext value> (encoded in hex) using <public key>\n\n";
-		useage += "-d   Usage: -d <private key> -i <cipertext value>\n";
-		useage += "       Decrypt the <ciphertext value> using <private key>\n";
+		useage += "-e   Usage: -e publicKey.txt -i <plaintext value>\n";
+		useage += "       Encrypt the integer <plaintext value> (encoded in hex) using the public key pair in the file.\n\n";
+		useage += "-d   Usage: -d privateKey.txt -i Cipher.txt\n";
+		useage += "       Decrypt the ciphertext value (encoded in hex) in the file using the private key pair in the file.\n";
 		
 		System.err.println(useage);
 		System.exit(exitStatus);
