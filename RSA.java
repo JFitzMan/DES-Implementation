@@ -14,15 +14,15 @@ import gnu.getopt.Getopt;
 
 public class RSA {
 
-	public static void main(String[] args){
+		public static void main(String[] args){
 		
 		StringBuilder bitSizeStr = new StringBuilder();
-		//StringBuilder nStr = new StringBuilder();
+		StringBuilder nStr = new StringBuilder();
 		StringBuilder dStr = new StringBuilder();
 		StringBuilder eStr = new StringBuilder();
 		StringBuilder m = new StringBuilder();
 		
-		pcl(args, bitSizeStr, dStr, eStr,m);
+		pcl(args, bitSizeStr, nStr, dStr, eStr,m);
 		
 		if(!bitSizeStr.toString().equalsIgnoreCase("")){
 			//This means you want to create a new key
@@ -30,70 +30,45 @@ public class RSA {
 		}
 		
 		if(!eStr.toString().equalsIgnoreCase("")){
-			RSAencrypt(m, eStr);
+			RSAencrypt(m, nStr, eStr);
 		}
 		
 		if(!dStr.toString().equalsIgnoreCase("")){
-			RSAdecrypt(m, dStr);
+			RSAdecrypt(m, nStr, dStr);
 		}
-		
-		
+			
 	}
 
-	private static void RSAencrypt(StringBuilder m, StringBuilder keyStr) {
+	private static void RSAencrypt(StringBuilder m, StringBuilder nStr, StringBuilder eStr) {
 		BigInteger e, n, M, C; 			//M = Message, C = Ciphertext
 		//System.out.println("m = " + m.toString() + "\nkeyStr = " + keyStr.toString());
-		String[] keys = getKeys(keyStr);
 		String cipher = null;
 		
-		e = new BigInteger(keys[0], 16); 	//Get e, should be first entry in the file
-		n = new BigInteger(keys[1], 16);	//Get n, should be second entry
+		e = new BigInteger(eStr.toString(), 16); 	//Get e, should be first entry in the file
+		n = new BigInteger(nStr.toString(), 16);	//Get n, should be second entry
 		M = new BigInteger(m.toString(), 16);
 		C = M.modPow(e, n);				//From slide, C = M^e mod n			
 		//System.out.println("e = " + e.toString() + "\nn = " + n.toString() + "\nMessage = " + M.toString() + "\nC = " + C.toString());
 		
 		cipher = C.toString(16);		//Convert from BigInteger to string in hex
 		System.out.println("\nCipher = " + cipher);
-		
-		try (Writer cWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Cipher.txt"), "utf-8"))) {
-				cWriter.write(cipher);
-			} catch (Exception ex) {
-				System.out.println("File could not be written to.");
-			}
-		System.out.println("\nCipher has been written to Cipher.txt");
 	}
 
-	private static void RSAdecrypt(StringBuilder c, StringBuilder keyStr){
+	private static void RSAdecrypt(StringBuilder cStr, StringBuilder nStr, StringBuilder dStr){
 		BigInteger d, n, C, M;
 		//System.out.println("c = " + c.toString() + "\nkeyStr = " + keyStr.toString());
-		String[] keys = getKeys(keyStr);
-		String cipher = null;
 		String message = null;
 		
-		try{ 			//Get the ciphertext from the file it was written to
-			BufferedReader buf = new BufferedReader(new FileReader(c.toString()));
-			StringBuffer stringBuf = new StringBuffer();
-			cipher = buf.readLine();
-		} catch (Exception ex) {
-			System.err.println("File " + keyStr.toString() + " could not be opened!");
-		}
-		
-		d = new BigInteger(keys[0], 16);		//Pretty much the same as encrypt
-		n = new BigInteger(keys[1], 16);
-		C = new BigInteger(cipher, 16);
+		d = new BigInteger(dStr.toString(), 16);		//Pretty much the same as encrypt
+		n = new BigInteger(nStr.toString(), 16);
+		C = new BigInteger(cStr.toString(), 16);
 		M = C.modPow(d, n);					//From slide, M = C^d mod n
 		//System.out.println("d = " + d.toString() + "\nn = " + n.toString() + "\nC = " + C.toString() + "\nM = " + M.toString());
 		
 		message = M.toString(16);
-		System.out.println("\nMessage = " + message);
-		
-		try (Writer mWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Message.txt"), "utf-8"))) {
-				mWriter.write(message);
-			} catch (Exception ex) {
-				System.out.println("File could not be written to.");
-			}
-		System.out.println("\nMessage has been written to Message.txt");
-		
+		if (message.length() != 16)
+			message = "0"+message; 			//I guess BigInteger.toString deletes leading zeroes. Makes sense. Put them back in. 
+		System.out.println("\nMessage = " + message);	
 	}
 	
 	private static void genRSAkey(StringBuilder bitSizeStr) {
@@ -104,8 +79,8 @@ public class RSA {
 		try{
 			SecureRandom r = SecureRandom.getInstance("SHA1PRNG"); //Get a securely random number for seeding the prime method.
 			int bitSize = Integer.valueOf(s);				//Do stuff to turn StringBuilder into an int.
-			p = BigInteger.probablePrime(bitSize/2, r); 	//Generates numbers with the 2^-100 chance of not being prime.
-			q = BigInteger.probablePrime(bitSize/2, r);		//Close enough for me.
+			p = BigInteger.probablePrime(bitSize/2, r); 	//Generates numbers with the 2^-100 chance of not being prime. Close enough for me. 
+			q = BigInteger.probablePrime(bitSize/2, r);		//bitSize/2 because after being multiplied together it'll be bitSize.
 			n = p.multiply(q);
 			phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
 			e = new BigInteger("17"); 						//One example from slides, I don't see why not.
@@ -114,52 +89,26 @@ public class RSA {
 			}
 			d = e.modInverse(phi); 							//Thank god BigInteger has methods for literally everything, right?
 			
+			System.out.println("\n	Public Key:  (e, n) \n	Private Key: (d, n)");
 			//Specifying 16 when using toString on a BigInteger encodes it in hex. BigIntegers are magic.
-			System.out.println("\nPublic key = (" + e.toString(16) + " , " + n.toString(16) + ")");
-			System.out.println("\nPrivate key = (" + d.toString(16) + " , " + n.toString(16) + ")");
-			
-			try (Writer pubWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("publicKey.txt"), "utf-8"))) {
-				pubWriter.write(e.toString(16) + " " + n.toString(16));
-			} 
-			try (Writer privWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("privateKey.txt"), "utf-8"))) {
-				privWriter.write(d.toString(16) + " " + n.toString(16));
-			}
-			
-			//I don't expect anyone to manually copy and paste these huge beasts of numbers for the keys. Just read it from these files.
-			System.out.println("\nKeys have been written to publicKey.txt and privateKey.txt");
-				
+			System.out.println("\ne = " + e.toString(16) + "\n\nd = " + d.toString(16) + "\n\nn = " + n.toString(16));
+						
 		} catch (Exception ex){
-    		System.out.println("Invalid algorithm given to SecureRandom.getInstance (I think)");
+    		System.out.println("Invalid algorithm given to SecureRandom.getInstance");
     		return;
     	} 
-	}
-
-	private static String[] getKeys(StringBuilder keyStr){
-		String[] keys = { " ", " " }; 		//Needs to be initialized to be used in the try/catch block.
-		try{
-			BufferedReader buf = new BufferedReader(new FileReader(keyStr.toString()));
-			StringBuffer stringBuf = new StringBuffer();
-			String line = null;
-			while ((line = buf.readLine())!=null){
-				stringBuf.append(line);
-			}
-			keys = stringBuf.toString().split(" ");
-		} catch (Exception ex) {
-			System.err.println("File " + keyStr.toString() + " could not be opened!");
-		}
-		return keys;
 	}
 	
 	/**
 	 * This function Processes the Command Line Arguments.
 	 */
 	private static void pcl(String[] args, StringBuilder bitSizeStr,
-							StringBuilder dStr, StringBuilder eStr,
+							StringBuilder nStr, StringBuilder dStr, StringBuilder eStr,
 							StringBuilder m) {
 		/*
 		 * http://www.urbanophile.com/arenn/hacking/getopt/gnu.getopt.Getopt.html
 		*/	
-		Getopt g = new Getopt("Chat Program", args, "hke:d:b:i:");
+		Getopt g = new Getopt("Chat Program", args, "hke:d:b:n:i:");
 		int c;
 		String arg;
 		while ((c = g.getopt()) != -1){
@@ -172,10 +121,10 @@ public class RSA {
 		        	  arg = g.getOptarg();
 		        	  eStr.append(arg);
 		        	  break;
-		     	  /*case 'n':
+		     	  case 'n':
 		        	  arg = g.getOptarg();
 		        	  nStr.append(arg);
-		        	  break; */
+		        	  break;
 		     	  case 'd':
 		        	  arg = g.getOptarg();
 		        	  dStr.append(arg);
@@ -204,10 +153,10 @@ public class RSA {
 		useage += "-k   Usage: -k -b <bit size>\n";
 		useage += "       Generate a private/public key pair, encoded in hex, printed on the command line.\n";
 		useage += "       Key will be <bit size> big. If not specified, default is 1024. \n\n";
-		useage += "-e   Usage: -e publicKey.txt -i <plaintext value>\n";
-		useage += "       Encrypt the integer <plaintext value> (encoded in hex) using the public key pair in the file.\n\n";
-		useage += "-d   Usage: -d privateKey.txt -i Cipher.txt\n";
-		useage += "       Decrypt the ciphertext value (encoded in hex) in the file using the private key pair in the file.\n";
+		useage += "-e   Usage: -e <public key> -n <modulus> -i <plaintext value>\n";
+		useage += "       Encrypt the integer <plaintext value> (encoded in hex) using the public key pair (e, n).\n\n";
+		useage += "-d   Usage: -d <private key> -n <modulus> -i Cipher.txt\n";
+		useage += "       Decrypt the ciphertext value (encoded in hex) in the file using the private key pair (d, n).\n";
 		
 		System.err.println(useage);
 		System.exit(exitStatus);
